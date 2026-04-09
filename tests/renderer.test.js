@@ -62,3 +62,13 @@ test('renderPresentation - returns container with one child per frame', () => {
   assert.equal(container.querySelectorAll('.present-frame').length, 2);
   assert.equal(container.querySelector('#f1').dataset.layout, 'hero');
 });
+
+test('renderElement - vendor prefix camelCase converts correctly', () => {
+  const R = loadRenderer();
+  const html = R.renderElement({
+    id: 'el-3', type: 'body', content: 'text',
+    style: { webkitTransform: 'translateX(10px)', WebkitBackdropFilter: 'blur(8px)' },
+  });
+  assert.ok(html.includes('-webkit-transform: translateX(10px)'), 'lowercase webkit prefix');
+  assert.ok(html.includes('-webkit-backdrop-filter: blur(8px)'), 'uppercase Webkit prefix');
+});

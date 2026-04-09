@@ -4,7 +4,11 @@
   // ── Utilities ───────────────────────────────────────────────────────────────
 
   function camelToKebab(str) {
-    return str.replace(/([A-Z])/g, (m) => '-' + m.toLowerCase());
+    return str
+      .replace(/^(webkit|moz|ms|o)([A-Z])/, (_, prefix, first) =>
+        '-' + prefix + '-' + first.toLowerCase()
+      )
+      .replace(/([A-Z])/g, (m) => '-' + m.toLowerCase());
   }
 
   function styleObjectToCSS(obj) {
@@ -135,8 +139,11 @@
       }
     }
 
-    const renderer = LAYOUT_RENDERERS[frame.layout] || renderRawLayout;
-    wrapper.appendChild(renderer(frame));
+    const renderer = LAYOUT_RENDERERS[frame.layout];
+    if (!renderer) {
+      console.warn(`[PresentRenderer] Unknown layout "${frame.layout}" on frame "${frame.id}", falling back to raw`);
+    }
+    wrapper.appendChild((renderer || renderRawLayout)(frame));
     return wrapper;
   }
 
@@ -156,8 +163,8 @@
   const PresentRenderer = { renderPresentation, renderFrame, renderElement };
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PresentRenderer;           // Node.js (tests)
+    module.exports = PresentRenderer;           // CJS require() context
   } else {
-    root.PresentRenderer = PresentRenderer;     // Browser
+    root.PresentRenderer = PresentRenderer;     // Browser (and ESM via global)
   }
 })(typeof window !== 'undefined' ? window : global);
