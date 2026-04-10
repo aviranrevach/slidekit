@@ -67,14 +67,14 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 .present-frame.frame-selected { border-color: #6366f1; }
 
 /* ── Frame toolbar ── */
-.frame-wrapper { position: relative; margin-bottom: 16px; }
+.frame-wrapper { position: relative; margin-bottom: 16px; padding-top: 40px; }
 .frame-wrapper .present-frame { margin-bottom: 0; }
 
 .frame-toolbar {
-  position: absolute; top: -36px; left: 0; right: 0;
+  position: absolute; top: 0; left: 0; right: 0;
   display: flex; align-items: center; gap: 4px;
   opacity: 0; transition: opacity 0.15s;
-  pointer-events: none; z-index: 20;
+  pointer-events: none; z-index: 20; height: 36px;
 }
 .frame-wrapper:hover .frame-toolbar { opacity: 1; pointer-events: all; }
 
