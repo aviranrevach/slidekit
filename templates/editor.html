@@ -1106,7 +1106,7 @@ function exportHTML() {
   a.href = URL.createObjectURL(blob);
   a.download = slug + '.html';
   a.click();
-  URL.revokeObjectURL(a.href);
+  setTimeout(() => URL.revokeObjectURL(a.href), 100);
 }
 
 // ── Canvas mode ──────────────────────────────────────────────────────────────
@@ -1156,6 +1156,9 @@ function nextFrame() { showFrameAtIndex(frameModeIndex + 1); }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
+// Sync canvas mode toggle buttons with saved state
+document.getElementById('mode-scroll').classList.toggle('active', canvasMode === 'scroll');
+document.getElementById('mode-frame').classList.toggle('active', canvasMode === 'frame');
 loadAndRender();
 connectSSE();
 </script>
