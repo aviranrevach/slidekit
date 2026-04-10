@@ -66,6 +66,57 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 .present-frame:hover { border-color: rgba(99,102,241,0.3); }
 .present-frame.frame-selected { border-color: #6366f1; }
 
+/* ── Frame toolbar ── */
+.frame-wrapper { position: relative; margin-bottom: 16px; }
+.frame-wrapper .present-frame { margin-bottom: 0; }
+
+.frame-toolbar {
+  position: absolute; top: -36px; left: 0; right: 0;
+  display: flex; align-items: center; gap: 4px;
+  opacity: 0; transition: opacity 0.15s;
+  pointer-events: none; z-index: 20;
+}
+.frame-wrapper:hover .frame-toolbar { opacity: 1; pointer-events: all; }
+
+.ftb {
+  background: rgba(15,17,23,0.9); backdrop-filter: blur(8px);
+  border: 1px solid #2d3f55; color: #94a3b8;
+  border-radius: 5px; padding: 4px 9px; font-size: 10px;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+.ftb:hover { background: #1e2a3a; color: #e2e8f0; }
+.ftb.danger:hover { background: rgba(239,68,68,0.15); color: #ef4444; border-color: rgba(239,68,68,0.3); }
+.ftb.active { background: #1e1f45; color: #a5b4fc; border-color: #4f46e5; }
+.ftb-spacer { flex: 1; }
+
+/* ── Frame hidden/locked states ── */
+.present-frame.frame-hidden { opacity: 0.25; }
+.present-frame.frame-hidden::after {
+  content: 'HIDDEN'; position: absolute; top: 8px; right: 8px;
+  font-size: 9px; background: #334155; color: #94a3b8;
+  padding: 2px 6px; border-radius: 3px; letter-spacing: 0.1em;
+}
+.present-frame.frame-locked::before {
+  content: '🔒'; position: absolute; top: 8px; right: 8px;
+  font-size: 12px; z-index: 10;
+}
+.present-frame.frame-locked.frame-hidden::before { right: 68px; }
+
+/* ── Layout picker dropdown ── */
+.layout-picker {
+  position: absolute; top: 28px; left: 0;
+  background: #10141e; border: 1px solid #2d3f55; border-radius: 8px;
+  padding: 6px; display: none; flex-direction: column; gap: 2px;
+  z-index: 100; min-width: 140px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.layout-picker.open { display: flex; }
+.layout-opt {
+  padding: 6px 10px; font-size: 11px; color: #94a3b8; border-radius: 4px; cursor: pointer;
+}
+.layout-opt:hover { background: #1e2a3a; color: #e2e8f0; }
+.layout-opt.current { color: #a5b4fc; background: #1e1f45; }
+
 /* Layout types */
 .layout-hero {
   padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; min-height: 400px;
@@ -297,6 +348,119 @@ let selectedElementId = null;
 let panelCollapsed = false;
 let pendingWrites = 0;
 
+// ── Frame toolbar ────────────────────────────────────────────────────────────
+
+const FRAME_LAYOUTS = ['hero', 'two-col', 'cards', 'text', 'image-full', 'raw'];
+
+function buildFrameToolbar(frameId, frameData) {
+  const tb = document.createElement('div');
+  tb.className = 'frame-toolbar';
+
+  // Hide button
+  const hideBtn = document.createElement('button');
+  hideBtn.className = 'ftb' + (frameData.hidden ? ' active' : '');
+  hideBtn.textContent = frameData.hidden ? '\u{1F441} Show' : '\u25cc Hide';
+  hideBtn.onclick = (e) => { e.stopPropagation(); toggleFrameHidden(frameId); };
+  tb.appendChild(hideBtn);
+
+  // Lock button
+  const isLocked = frameData.locked?.content || frameData.locked?.layout;
+  const lockBtn = document.createElement('button');
+  lockBtn.className = 'ftb' + (isLocked ? ' active' : '');
+  lockBtn.textContent = isLocked ? '\uD83D\uDD12 Locked' : '\uD83D\uDD13 Lock';
+  lockBtn.onclick = (e) => { e.stopPropagation(); toggleFrameLock(frameId); };
+  tb.appendChild(lockBtn);
+
+  // Change layout dropdown
+  const layoutWrapper = document.createElement('div');
+  layoutWrapper.style.position = 'relative';
+
+  const layoutBtn = document.createElement('button');
+  layoutBtn.className = 'ftb';
+  layoutBtn.textContent = '\u229E ' + (frameData.layout || 'raw');
+  layoutBtn.onclick = (e) => {
+    e.stopPropagation();
+    const picker = layoutWrapper.querySelector('.layout-picker');
+    picker.classList.toggle('open');
+  };
+  layoutWrapper.appendChild(layoutBtn);
+
+  const picker = document.createElement('div');
+  picker.className = 'layout-picker';
+  FRAME_LAYOUTS.forEach(l => {
+    const opt = document.createElement('div');
+    opt.className = 'layout-opt' + (l === frameData.layout ? ' current' : '');
+    opt.textContent = l;
+    opt.onclick = (e) => {
+      e.stopPropagation();
+      picker.classList.remove('open');
+      if (l !== frameData.layout) changeFrameLayout(frameId, l);
+    };
+    picker.appendChild(opt);
+  });
+  layoutWrapper.appendChild(picker);
+  tb.appendChild(layoutWrapper);
+
+  // Close picker on outside click
+  document.addEventListener('click', () => picker.classList.remove('open'));
+
+  const spacer = document.createElement('span');
+  spacer.className = 'ftb-spacer';
+  tb.appendChild(spacer);
+
+  // Duplicate
+  const dupBtn = document.createElement('button');
+  dupBtn.className = 'ftb';
+  dupBtn.textContent = '\u2398 Duplicate';
+  dupBtn.onclick = (e) => { e.stopPropagation(); duplicateFrame(frameId); };
+  tb.appendChild(dupBtn);
+
+  // Delete
+  const delBtn = document.createElement('button');
+  delBtn.className = 'ftb danger';
+  delBtn.textContent = '\u2715 Delete';
+  delBtn.onclick = (e) => { e.stopPropagation(); deleteFrame(frameId); };
+  tb.appendChild(delBtn);
+
+  return tb;
+}
+
+function toggleFrameHidden(frameId) {
+  const frame = getFrame(frameId);
+  if (!frame) return;
+  updateFrame(frameId, { hidden: !frame.hidden });
+}
+
+function toggleFrameLock(frameId) {
+  const frame = getFrame(frameId);
+  if (!frame) return;
+  const isLocked = frame.locked?.content || frame.locked?.layout;
+  updateFrame(frameId, { locked: isLocked ? null : { content: true, layout: true } });
+}
+
+function changeFrameLayout(frameId, layout) {
+  updateFrame(frameId, { layout });
+}
+
+function duplicateFrame(frameId) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  const idx = json.frames.findIndex(f => f.id === frameId);
+  if (idx === -1) return;
+  const copy = JSON.parse(JSON.stringify(json.frames[idx]));
+  copy.id = 'frame-' + Date.now();
+  json.frames.splice(idx + 1, 0, copy);
+  writeJSON(json);
+}
+
+function deleteFrame(frameId) {
+  if (!currentJSON || currentJSON.frames.length <= 1) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  json.frames = json.frames.filter(f => f.id !== frameId);
+  writeJSON(json);
+  if (selectedFrameId === frameId) { selectedFrameId = null; selectedElementId = null; }
+}
+
 // ── Fetch + render ──────────────────────────────────────────────────────────
 
 async function loadAndRender() {
@@ -314,6 +478,26 @@ function renderEditor(json) {
   const canvas = document.getElementById('canvas');
   canvas.innerHTML = '';
   const root = PresentRenderer.renderPresentation(json);
+
+  // Wrap each frame in a .frame-wrapper and inject toolbar
+  const frameEls = Array.from(root.querySelectorAll('.present-frame'));
+  frameEls.forEach((frameEl) => {
+    const frameId = frameEl.id;
+    const frameData = json.frames.find(f => f.id === frameId);
+    if (!frameData) return;
+
+    // Apply hidden/locked visual states
+    if (frameData.hidden) frameEl.classList.add('frame-hidden');
+    if (frameData.locked) frameEl.classList.add('frame-locked');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'frame-wrapper';
+
+    const toolbar = buildFrameToolbar(frameId, frameData);
+    wrapper.appendChild(toolbar);
+    frameEl.parentNode.insertBefore(wrapper, frameEl);
+    wrapper.appendChild(frameEl);
+  });
 
   // Wire element click -> selection
   root.querySelectorAll('[data-element-id]').forEach(el => {
