@@ -91,6 +91,39 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Write full presentation.json (POST from editor on any structural change)
+  if (req.method === 'POST' && req.url === '/json') {
+    const MAX_JSON = 10 * 1024 * 1024; // 10 MB
+    let body = '';
+    let overflow = false;
+    req.on('data', (chunk) => {
+      if (overflow) return;
+      body += chunk;
+      if (body.length > MAX_JSON) {
+        overflow = true;
+        cors(res);
+        res.writeHead(413);
+        res.end('payload too large');
+        req.resume();
+      }
+    });
+    req.on('end', () => {
+      if (overflow) return;
+      try {
+        JSON.parse(body); // validate
+        fs.writeFileSync(PRESENTATION_JSON, body);
+        cors(res);
+        res.writeHead(200);
+        res.end();
+      } catch {
+        cors(res);
+        res.writeHead(400);
+        res.end('invalid JSON');
+      }
+    });
+    return;
+  }
+
   // Write selection.json (POST from editor on element click)
   if (req.method === 'POST' && req.url === '/selection') {
     const MAX_BODY = 65_536;
