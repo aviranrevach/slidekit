@@ -117,6 +117,27 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 .layout-opt:hover { background: #1e2a3a; color: #e2e8f0; }
 .layout-opt.current { color: #a5b4fc; background: #1e1f45; }
 
+/* ── Between-frame controls ── */
+.between-frames {
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px 0; position: relative; width: 100%;
+  opacity: 0; transition: opacity 0.2s;
+}
+.between-frames:hover { opacity: 1; }
+.frame-wrapper:hover + .between-frames,
+.between-frames:hover { opacity: 1; }
+.between-pill {
+  display: flex; gap: 2px;
+  background: #10141e; border: 1px solid #2d3f55; border-radius: 20px;
+  padding: 4px 8px;
+}
+.bp-btn {
+  background: none; border: none; color: #64748b; font-size: 11px;
+  padding: 3px 10px; border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+}
+.bp-btn:hover { background: #1e2a3a; color: #e2e8f0; }
+
 /* Layout types */
 .layout-hero {
   padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; min-height: 400px;
@@ -352,6 +373,47 @@ let pendingWrites = 0;
 
 const FRAME_LAYOUTS = ['hero', 'two-col', 'cards', 'text', 'image-full', 'raw'];
 
+function buildBetweenControls(afterFrameId) {
+  const div = document.createElement('div');
+  div.className = 'between-frames';
+
+  const pill = document.createElement('div');
+  pill.className = 'between-pill';
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'bp-btn';
+  addBtn.textContent = '+ Add';
+  addBtn.onclick = (e) => { e.stopPropagation(); addBlankFrame(afterFrameId); };
+  pill.appendChild(addBtn);
+
+  const dupBtn = document.createElement('button');
+  dupBtn.className = 'bp-btn';
+  dupBtn.textContent = '\u2398 Duplicate';
+  dupBtn.onclick = (e) => { e.stopPropagation(); duplicateFrame(afterFrameId); };
+  pill.appendChild(dupBtn);
+
+  div.appendChild(pill);
+  return div;
+}
+
+function addBlankFrame(afterFrameId) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  const idx = json.frames.findIndex(f => f.id === afterFrameId);
+  const insertAt = idx === -1 ? json.frames.length : idx + 1;
+  const now = Date.now();
+  const blank = {
+    id: 'frame-' + now,
+    layout: 'text',
+    background: { type: 'color', value: '#0f172a' },
+    elements: [
+      { id: 'el-' + now, type: 'heading', content: 'New Frame', style: { color: '#e2e8f0' } }
+    ]
+  };
+  json.frames.splice(insertAt, 0, blank);
+  writeJSON(json);
+}
+
 function buildFrameToolbar(frameId, frameData) {
   const tb = document.createElement('div');
   tb.className = 'frame-toolbar';
@@ -497,6 +559,13 @@ function renderEditor(json) {
     wrapper.appendChild(toolbar);
     frameEl.parentNode.insertBefore(wrapper, frameEl);
     wrapper.appendChild(frameEl);
+  });
+
+  // Inject between-frame controls after each wrapper
+  Array.from(root.querySelectorAll('.frame-wrapper')).forEach((wrapper) => {
+    const frameId = wrapper.querySelector('.present-frame')?.id;
+    if (!frameId) return;
+    wrapper.insertAdjacentElement('afterend', buildBetweenControls(frameId));
   });
 
   // Wire element click -> selection
