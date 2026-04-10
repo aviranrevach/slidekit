@@ -183,6 +183,38 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 }
 #status-selection { color: #6366f1; }
 
+/* ── Inspector panel ── */
+#inspector {
+  width: 0; min-width: 0; overflow: hidden;
+  background: #0d1117; border-left: 1px solid #1e2a3a;
+  flex-shrink: 0; display: flex; flex-direction: column;
+  transition: width 0.2s, min-width 0.2s;
+}
+#inspector.open { width: 216px; min-width: 216px; }
+
+.insp-section { padding: 12px 14px 10px; border-bottom: 1px solid #1e2a3a; }
+.insp-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: #4f46e5; margin-bottom: 10px;
+}
+.insp-field { margin-bottom: 8px; }
+.insp-field label { font-size: 10px; color: #475569; display: block; margin-bottom: 3px; }
+.insp-field input, .insp-field select {
+  background: #141820; border: 1px solid #1e2a3a; border-radius: 4px;
+  padding: 5px 8px; font-size: 11px; color: #cbd5e1; width: 100%;
+  outline: none; font-family: inherit;
+}
+.insp-field input:focus, .insp-field select:focus { border-color: #4f46e5; }
+.insp-hint {
+  margin: 10px 14px; font-size: 10px; color: #334155; line-height: 1.5;
+}
+.insp-hint span { color: #6366f1; }
+
+.anim-section { padding: 12px 14px 10px; border-bottom: 1px solid #1e2a3a; }
+.anim-dir { font-size: 9px; color: #4f46e5; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.anim-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.anim-row .insp-field { flex: 1; margin-bottom: 0; }
+
 /* ── Theme variants ── */
 .theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }
 .theme-light .present-frame { background: #ffffff; color: #0f172a; }
@@ -210,6 +242,11 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 
   <!-- Scroll canvas -->
   <div id="canvas"></div>
+
+  <!-- Right inspector -->
+  <div id="inspector">
+    <div id="inspector-content"></div>
+  </div>
 </div>
 
 <!-- Status bar -->
@@ -591,7 +628,10 @@ function renderEditor(json) {
 
   // Restore selection highlight
   if (selectedFrameId) highlightFrame(selectedFrameId);
-  if (selectedElementId) highlightElement(selectedElementId);
+  if (selectedElementId) {
+    highlightElement(selectedElementId);
+    openInspector(selectedElementId);
+  }
 }
 
 // ── Selection ───────────────────────────────────────────────────────────────
@@ -603,6 +643,7 @@ function selectFrame(frameId) {
   clearElementHighlight();
   updateStatus();
   postSelection({ frameId });
+  closeInspector();
 }
 
 function selectElement(frameId, elementId) {
@@ -612,6 +653,7 @@ function selectElement(frameId, elementId) {
   highlightElement(elementId);
   updateStatus();
   postSelection({ frameId, elementId });
+  openInspector(elementId);
 }
 
 function highlightFrame(frameId) {
@@ -793,6 +835,187 @@ function updateFrame(frameId, patch) {
   const frame = json.frames.find(f => f.id === frameId);
   if (!frame) return;
   Object.assign(frame, patch);
+  writeJSON(json);
+}
+
+// ── Inspector panel ─────────────────────────────────────────────────────────
+
+const ANIM_EFFECTS = ['', 'fade', 'fly-up', 'fly-down', 'fly-left', 'fly-right', 'scale-in', 'blur-in', 'wipe'];
+
+function openInspector(elementId) {
+  document.getElementById('inspector').classList.add('open');
+  renderInspector(elementId);
+}
+
+function closeInspector() {
+  document.getElementById('inspector').classList.remove('open');
+  document.getElementById('inspector-content').innerHTML = '';
+}
+
+function renderInspector(elementId) {
+  if (!elementId || !currentJSON) return;
+  const el = currentJSON.frames.flatMap(f => f.elements || []).find(e => e.id === elementId);
+  if (!el) return;
+
+  const content = document.getElementById('inspector-content');
+  content.innerHTML = '';
+
+  // Element properties section
+  const propSection = document.createElement('div');
+  propSection.className = 'insp-section';
+  propSection.innerHTML = '<div class="insp-title">Element \u2014 ' + el.type + '</div>';
+
+  propSection.appendChild(makeField('Font size', 'text', el.style?.fontSize || '', (v) => {
+    updateElementStyle(elementId, 'fontSize', v || undefined);
+  }));
+
+  propSection.appendChild(makeColorField('Color', el.style?.color || '#ffffff', (v) => {
+    updateElementStyle(elementId, 'color', v);
+  }));
+
+  const weightOpts = [['', 'Default'], ['400', 'Normal'], ['600', 'Semibold'], ['700', 'Bold']];
+  propSection.appendChild(makeSelectField('Weight', weightOpts, String(el.style?.fontWeight || ''), (v) => {
+    updateElementStyle(elementId, 'fontWeight', v ? Number(v) : undefined);
+  }));
+
+  content.appendChild(propSection);
+
+  // Animation section
+  const animIn = el.animation?.in || {};
+  const animOut = el.animation?.out || {};
+  const animSection = document.createElement('div');
+  animSection.className = 'anim-section';
+  animSection.innerHTML = '<div class="insp-title">Animation</div><div class="anim-dir">\u2197 In</div>';
+
+  animSection.appendChild(makeAnimEffectField(animIn.effect || '', (v) => updateAnimIn(elementId, 'effect', v || undefined)));
+  const inRow = document.createElement('div'); inRow.className = 'anim-row';
+  inRow.appendChild(wrapField('Duration', makeNumInput(animIn.duration ?? '', (v) => updateAnimIn(elementId, 'duration', v))));
+  inRow.appendChild(wrapField('Delay', makeNumInput(animIn.delay ?? '', (v) => updateAnimIn(elementId, 'delay', v))));
+  animSection.appendChild(inRow);
+
+  const outDir = document.createElement('div');
+  outDir.className = 'anim-dir'; outDir.style.marginTop = '10px';
+  outDir.textContent = '\u2199 Out';
+  animSection.appendChild(outDir);
+  animSection.appendChild(makeAnimEffectField(animOut.effect || '', (v) => updateAnimOut(elementId, 'effect', v || undefined)));
+  const outRow = document.createElement('div'); outRow.className = 'anim-row';
+  outRow.appendChild(wrapField('Duration', makeNumInput(animOut.duration ?? '', (v) => updateAnimOut(elementId, 'duration', v))));
+  animSection.appendChild(outRow);
+
+  content.appendChild(animSection);
+
+  // Hint
+  const hint = document.createElement('div');
+  hint.className = 'insp-hint';
+  hint.innerHTML = '<span>Tip:</span> Ask Claude in chat for complex changes \u2014 gradient text, custom animations, layout restructure.';
+  content.appendChild(hint);
+}
+
+// Field builders
+function makeField(label, type, value, onChange) {
+  const f = document.createElement('div'); f.className = 'insp-field';
+  const lbl = document.createElement('label'); lbl.textContent = label;
+  const inp = document.createElement('input'); inp.type = type; inp.value = value;
+  inp.addEventListener('change', () => onChange(inp.value));
+  f.appendChild(lbl); f.appendChild(inp);
+  return f;
+}
+
+function makeColorField(label, value, onChange) {
+  const f = document.createElement('div'); f.className = 'insp-field';
+  const lbl = document.createElement('label'); lbl.textContent = label;
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:6px;align-items:center;';
+  const swatch = document.createElement('input'); swatch.type = 'color';
+  if (/^#[0-9a-f]{3,6}$/i.test(value)) swatch.value = value;
+  swatch.style.cssText = 'width:28px;height:28px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none;';
+  const text = document.createElement('input'); text.type = 'text'; text.value = value; text.style.flex = '1';
+  swatch.addEventListener('input', () => { text.value = swatch.value; onChange(swatch.value); });
+  text.addEventListener('change', () => onChange(text.value));
+  row.appendChild(swatch); row.appendChild(text);
+  f.appendChild(lbl); f.appendChild(row);
+  return f;
+}
+
+function makeSelectField(label, options, value, onChange) {
+  const f = document.createElement('div'); f.className = 'insp-field';
+  const lbl = document.createElement('label'); lbl.textContent = label;
+  const sel = document.createElement('select');
+  options.forEach(([v, t]) => {
+    const opt = document.createElement('option'); opt.value = v; opt.textContent = t;
+    if (v === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => onChange(sel.value));
+  f.appendChild(lbl); f.appendChild(sel);
+  return f;
+}
+
+function makeAnimEffectField(value, onChange) {
+  const opts = ANIM_EFFECTS.map(e => [e, e || 'none']);
+  return makeSelectField('Effect', opts, value, onChange);
+}
+
+function makeNumInput(value, onChange) {
+  const inp = document.createElement('input');
+  inp.type = 'number'; inp.min = '0'; inp.step = '0.1';
+  inp.value = (value === '' || value == null) ? '' : value;
+  inp.style.cssText = 'background:#141820;border:1px solid #1e2a3a;border-radius:4px;padding:5px 8px;font-size:11px;color:#cbd5e1;width:100%;outline:none;';
+  inp.addEventListener('change', () => {
+    const v = parseFloat(inp.value);
+    onChange(isNaN(v) ? undefined : v);
+  });
+  return inp;
+}
+
+function wrapField(label, input) {
+  const f = document.createElement('div'); f.className = 'insp-field'; f.style.flex = '1';
+  const lbl = document.createElement('label'); lbl.textContent = label;
+  f.appendChild(lbl); f.appendChild(input);
+  return f;
+}
+
+// JSON update helpers
+function updateElementStyle(elementId, prop, value) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  for (const frame of json.frames) {
+    const el = (frame.elements || []).find(e => e.id === elementId);
+    if (el) {
+      el.style = el.style || {};
+      if (value === undefined) delete el.style[prop]; else el.style[prop] = value;
+      break;
+    }
+  }
+  writeJSON(json);
+}
+
+function updateAnimIn(elementId, prop, value) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  for (const frame of json.frames) {
+    const el = (frame.elements || []).find(e => e.id === elementId);
+    if (el) {
+      el.animation = el.animation || {};
+      el.animation.in = el.animation.in || {};
+      if (value === undefined) delete el.animation.in[prop]; else el.animation.in[prop] = value;
+      break;
+    }
+  }
+  writeJSON(json);
+}
+
+function updateAnimOut(elementId, prop, value) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  for (const frame of json.frames) {
+    const el = (frame.elements || []).find(e => e.id === elementId);
+    if (el) {
+      el.animation = el.animation || {};
+      el.animation.out = el.animation.out || {};
+      if (value === undefined) delete el.animation.out[prop]; else el.animation.out[prop] = value;
+      break;
+    }
+  }
   writeJSON(json);
 }
 
