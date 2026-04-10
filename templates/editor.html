@@ -218,6 +218,41 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 /* ── Theme variants ── */
 .theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }
 .theme-light .present-frame { background: #ffffff; color: #0f172a; }
+
+/* ── Frame mode ── */
+#canvas.frame-mode {
+  padding: 24px;
+  justify-content: center;
+  align-items: center;
+}
+#canvas.frame-mode .present-root {
+  flex-direction: row;
+  max-width: 100%;
+}
+#canvas.frame-mode .frame-wrapper:not(.frame-active-mode) { display: none; }
+#canvas.frame-mode .between-frames { display: none; }
+#canvas.frame-mode .frame-active-mode .present-frame { min-height: 70vh; }
+
+#frame-mode-nav {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: rgba(15,17,23,0.9); backdrop-filter: blur(8px);
+  border: 1px solid #2d3f55; border-radius: 24px; padding: 8px 16px;
+  display: none; align-items: center; gap: 12px; z-index: 200;
+}
+#frame-mode-nav.visible { display: flex; }
+#frame-mode-nav button {
+  background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 4px 8px;
+}
+#frame-mode-nav button:hover { color: #e2e8f0; }
+#frame-mode-nav .nav-label { font-size: 11px; color: #64748b; min-width: 60px; text-align: center; }
+
+.canvas-mode-toggle {
+  display: flex; background: #1e2a3a; border-radius: 5px; overflow: hidden;
+}
+.cmt-opt {
+  padding: 4px 10px; font-size: 10px; color: #64748b; cursor: pointer; border: none; background: none;
+}
+.cmt-opt.active { background: #4f46e5; color: white; }
 </style>
 </head>
 <body>
@@ -225,7 +260,16 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
 <!-- Top bar -->
 <div id="topbar">
   <span class="title" id="pres-title">Loading...</span>
+  <select id="theme-picker" onchange="setTheme(this.value)" style="background:#1e2a3a;border:1px solid #2d3f55;color:#94a3b8;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+  </select>
+  <div class="canvas-mode-toggle">
+    <button class="cmt-opt active" id="mode-scroll" onclick="setCanvasMode('scroll')">Scroll</button>
+    <button class="cmt-opt" id="mode-frame" onclick="setCanvasMode('frame')">Frame</button>
+  </div>
   <button onclick="openPreview()">&#9654; Preview</button>
+  <button class="primary" onclick="exportHTML()">&darr; Export</button>
 </div>
 
 <!-- Body -->
@@ -254,6 +298,12 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
   <span id="status-conn">Connecting...</span>
   <span>|</span>
   <span id="status-selection">No element selected</span>
+</div>
+
+<div id="frame-mode-nav">
+  <button onclick="prevFrame()">&larr;</button>
+  <span class="nav-label" id="frame-nav-label">1 / 1</span>
+  <button onclick="nextFrame()">&rarr;</button>
 </div>
 
 <!-- Inline renderer -->
@@ -632,6 +682,9 @@ function renderEditor(json) {
     highlightElement(selectedElementId);
     openInspector(selectedElementId);
   }
+
+  syncThemePicker();
+  applyCanvasMode();
 }
 
 // ── Selection ───────────────────────────────────────────────────────────────
@@ -1023,6 +1076,83 @@ function updateAnimOut(elementId, prop, value) {
   }
   writeJSON(json);
 }
+
+// ── Theme picker ─────────────────────────────────────────────────────────────
+
+function setTheme(theme) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  json.meta = json.meta || {};
+  json.meta.theme = theme;
+  writeJSON(json);
+}
+
+function syncThemePicker() {
+  const picker = document.getElementById('theme-picker');
+  if (picker && currentJSON?.meta?.theme) picker.value = currentJSON.meta.theme;
+}
+
+// ── Export to single HTML ────────────────────────────────────────────────────
+
+function exportHTML() {
+  if (!currentJSON) return;
+  const exportJSON = JSON.parse(JSON.stringify(currentJSON));
+  exportJSON.frames = exportJSON.frames.filter(f => !f.hidden);
+  const html = buildPreviewHTML(exportJSON);
+  const slug = (currentJSON.meta?.title || 'presentation')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = slug + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── Canvas mode ──────────────────────────────────────────────────────────────
+
+let canvasMode = localStorage.getItem('presentCanvasMode') || 'scroll';
+let frameModeIndex = 0;
+
+function setCanvasMode(mode) {
+  canvasMode = mode;
+  localStorage.setItem('presentCanvasMode', mode);
+  document.getElementById('mode-scroll').classList.toggle('active', mode === 'scroll');
+  document.getElementById('mode-frame').classList.toggle('active', mode === 'frame');
+  applyCanvasMode();
+}
+
+function applyCanvasMode() {
+  const canvas = document.getElementById('canvas');
+  const nav = document.getElementById('frame-mode-nav');
+  if (canvasMode === 'frame') {
+    canvas.classList.add('frame-mode');
+    nav.classList.add('visible');
+    showFrameAtIndex(frameModeIndex);
+  } else {
+    canvas.classList.remove('frame-mode');
+    nav.classList.remove('visible');
+    canvas.querySelectorAll('.frame-wrapper').forEach(w => w.classList.remove('frame-active-mode'));
+  }
+}
+
+function showFrameAtIndex(idx) {
+  const wrappers = Array.from(document.querySelectorAll('.frame-wrapper'));
+  const visible = wrappers.filter(w => {
+    const fid = w.querySelector('.present-frame')?.id;
+    const fd = currentJSON?.frames.find(f => f.id === fid);
+    return fd && !fd.hidden;
+  });
+  if (!visible.length) return;
+  frameModeIndex = Math.max(0, Math.min(idx, visible.length - 1));
+  wrappers.forEach(w => w.classList.remove('frame-active-mode'));
+  visible[frameModeIndex].classList.add('frame-active-mode');
+  const label = document.getElementById('frame-nav-label');
+  if (label) label.textContent = (frameModeIndex + 1) + ' / ' + visible.length;
+}
+
+function prevFrame() { showFrameAtIndex(frameModeIndex - 1); }
+function nextFrame() { showFrameAtIndex(frameModeIndex + 1); }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 
