@@ -14,6 +14,7 @@ const SELECTION_JSON    = path.join(PROJECT_DIR, 'selection.json');
 const EDITOR_HTML       = path.join(TEMPLATES, 'editor.html');
 
 const sseClients = new Set();
+let previewHTML = null;
 
 // Verify presentation.json exists before watching
 if (!fs.existsSync(PRESENTATION_JSON)) {
@@ -54,6 +55,33 @@ const server = http.createServer((req, res) => {
     cors(res);
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // Serve preview HTML (GET)
+  if (req.method === 'GET' && req.url === '/preview') {
+    cors(res);
+    if (previewHTML) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(previewHTML);
+    } else {
+      res.writeHead(404);
+      res.end('No preview available yet. Click Preview in the editor first.');
+    }
+    return;
+  }
+
+  // Store preview HTML (POST)
+  if (req.method === 'POST' && req.url === '/preview') {
+    req.setEncoding('utf8');
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    req.on('end', () => {
+      previewHTML = body;
+      cors(res);
+      res.writeHead(200);
+      res.end();
+    });
     return;
   }
 

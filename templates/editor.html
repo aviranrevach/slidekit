@@ -821,11 +821,23 @@ function connectSSE() {
 
 // ── Preview ───────────────────────────────────────────────────────────────────
 
-function openPreview() {
+async function openPreview() {
   if (!currentJSON) return;
   const html = buildPreviewHTML(currentJSON);
-  const blob = new Blob([html], { type: 'text/html' });
-  window.open(URL.createObjectURL(blob), '_blank');
+  try {
+    await fetch('/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/html' },
+      body: html,
+    });
+    window.open('/preview', '_blank');
+  } catch (e) {
+    // Fallback to blob if server unreachable
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  }
 }
 
 function buildPreviewHTML(json) {
