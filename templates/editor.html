@@ -863,10 +863,19 @@ function buildPreviewHTML(json) {
     'ul { padding-left: 1.5em; display: flex; flex-direction: column; gap: 8px; } li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }\n' +
     '.present-button { display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600; text-decoration: none; background: #4f46e5; color: white; }\n';
 
+  // Slides: 1280×720 fixed canvas, scaled to fit viewport
+  const CANVAS_W = 1280, CANVAS_H = 720;
+  const bgColor = json.meta?.theme === 'light' ? '#ffffff' : '#0a0a0f';
+
   const slidesCSS =
-    'html, body { height: 100%; overflow: hidden; }\n' +
-    '.present-root { height: 100vh; }\n' +
-    '.present-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.4s; }\n' +
+    'html, body { width: 100vw; height: 100vh; overflow: hidden; background: ' + bgColor + '; display: flex; align-items: center; justify-content: center; }\n' +
+    '#root { position: relative; }\n' +
+    '.present-root { width: ' + CANVAS_W + 'px; height: ' + CANVAS_H + 'px; position: relative; overflow: hidden; transform-origin: top left; }\n' +
+    '.present-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.4s; display: flex; flex-direction: column; }\n' +
+    '.present-frame .layout-hero, .present-frame .layout-text, .present-frame .layout-cards { flex: 1; }\n' +
+    '.present-frame .layout-two-col { flex: 1; }\n' +
+    '.present-frame .layout-raw { flex: 1; display: flex; flex-direction: column; }\n' +
+    '.present-frame .layout-raw > div { flex: 1; }\n' +
     '.present-frame.slide-active { opacity: 1; pointer-events: all; }\n' +
     '#slide-nav { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; background: rgba(15,17,23,0.85); backdrop-filter: blur(8px); border: 1px solid #2d3f55; border-radius: 24px; padding: 8px 20px; z-index: 999; }\n' +
     '#slide-nav button { background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 8px; }\n' +
@@ -874,20 +883,31 @@ function buildPreviewHTML(json) {
     '#slide-nav .slide-label { font-size: 11px; color: #64748b; min-width: 50px; text-align: center; }\n';
 
   const scrollCSS =
+    'body { overflow-x: hidden; }\n' +
     '.present-frame { width: 100%; }\n';
 
   const slidesJS =
+    'var CANVAS_W = ' + CANVAS_W + ', CANVAS_H = ' + CANVAS_H + ';\n' +
+    'var root = document.querySelector(".present-root");\n' +
+    'function applyScale() {\n' +
+    '  var scale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);\n' +
+    '  root.style.transform = "scale(" + scale + ")";\n' +
+    '  root.style.transformOrigin = "top left";\n' +
+    '  root.parentElement.style.width = Math.round(CANVAS_W * scale) + "px";\n' +
+    '  root.parentElement.style.height = Math.round(CANVAS_H * scale) + "px";\n' +
+    '}\n' +
+    'applyScale();\n' +
+    'window.addEventListener("resize", applyScale);\n' +
     'var frames = Array.from(container.querySelectorAll(".present-frame"));\n' +
     'var idx = 0;\n' +
+    'var animator = PresentRenderer.initAnimations(container, "slides");\n' +
     'function showSlide(i) {\n' +
     '  idx = Math.max(0, Math.min(i, frames.length - 1));\n' +
     '  frames.forEach(function(f, n) { f.classList.toggle("slide-active", n === idx); });\n' +
     '  document.getElementById("slide-count").textContent = (idx+1) + " / " + frames.length;\n' +
-    '  PresentRenderer.initAnimations({ querySelectorAll: function() { return [frames[idx]]; } }, "slides");\n' +
-    '  var anim = PresentRenderer.initAnimations(container, "slides");\n' +
-    '  anim.playFrame(idx);\n' +
+    '  animator.playFrame(idx);\n' +
     '}\n' +
-    'document.addEventListener("keydown", function(e) { if (e.key==="ArrowRight"||e.key===" ") showSlide(idx+1); if (e.key==="ArrowLeft") showSlide(idx-1); });\n' +
+    'document.addEventListener("keydown", function(e) { if (e.key==="ArrowRight"||e.key===" ") { e.preventDefault(); showSlide(idx+1); } if (e.key==="ArrowLeft") { e.preventDefault(); showSlide(idx-1); } });\n' +
     'document.getElementById("prev-slide").onclick = function() { showSlide(idx-1); };\n' +
     'document.getElementById("next-slide").onclick = function() { showSlide(idx+1); };\n' +
     'showSlide(0);\n';
