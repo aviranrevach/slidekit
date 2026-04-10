@@ -841,46 +841,84 @@ async function openPreview() {
 }
 
 function buildPreviewHTML(json) {
-  const nav = json.meta?.navigation || 'slides';
-  // Grab the inlined renderer source by extracting the IIFE from the first script block
+  // canvasMode drives the preview layout: frame = slides, scroll = continuous page
+  const isSlides = (canvasMode === 'frame');
   const rendererScript = document.querySelector('script:not([src])').textContent;
-  return '<!DOCTYPE html>\n' +
-    '<html lang="en">\n' +
-    '<head><meta charset="UTF-8"><title>' + (json.meta?.title || 'Presentation') + '</title>\n' +
-    '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>\n' +
-    '<style>\n' +
+
+  const baseCSS =
     '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n' +
-    'body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif; overflow-x: hidden; }\n' +
-    '.present-frame { width: 100%; ' + (nav === 'slides' ? 'height: 100vh; overflow: hidden;' : 'min-height: 100vh;') + ' }\n' +
-    '.layout-hero { padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; justify-content: center; min-height: 100%; }\n' +
-    '.layout-two-col { display: grid; grid-template-columns: 1fr 1fr; min-height: 100%; }\n' +
+    'body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif; }\n' +
+    '.layout-hero { padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }\n' +
+    '.layout-two-col { display: grid; grid-template-columns: 1fr 1fr; }\n' +
     '.layout-two-col .col-left, .layout-two-col .col-right { padding: 48px 40px; display: flex; flex-direction: column; gap: 16px; }\n' +
-    '.layout-cards { padding: 48px; display: flex; flex-direction: column; gap: 24px; min-height: 100%; }\n' +
-    '.layout-text { padding: 56px 64px; display: flex; flex-direction: column; gap: 20px; min-height: 100%; }\n' +
-    '.layout-image-full { min-height: 100vh; display: flex; align-items: center; justify-content: center; }\n' +
-    '.layout-raw { min-height: 100vh; }\n' +
+    '.layout-cards { padding: 48px; display: flex; flex-direction: column; gap: 24px; }\n' +
+    '.layout-text { padding: 56px 64px; display: flex; flex-direction: column; gap: 20px; }\n' +
+    '.layout-image-full { display: flex; align-items: center; justify-content: center; }\n' +
+    '.layout-raw { }\n' +
     '.theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }\n' +
     '.theme-light .present-frame { background: #ffffff; color: #0f172a; }\n' +
     'h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }\n' +
     'h2 { font-size: 2rem; font-weight: 600; line-height: 1.25; }\n' +
     'p  { font-size: 1.1rem; line-height: 1.7; opacity: 0.8; }\n' +
     'ul { padding-left: 1.5em; display: flex; flex-direction: column; gap: 8px; } li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }\n' +
-    '.present-button { display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600; text-decoration: none; background: #4f46e5; color: white; }\n' +
-    '</style>\n' +
-    '</head>\n' +
+    '.present-button { display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600; text-decoration: none; background: #4f46e5; color: white; }\n';
+
+  const slidesCSS =
+    'html, body { height: 100%; overflow: hidden; }\n' +
+    '.present-root { height: 100vh; }\n' +
+    '.present-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 0.4s; }\n' +
+    '.present-frame.slide-active { opacity: 1; pointer-events: all; }\n' +
+    '#slide-nav { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; background: rgba(15,17,23,0.85); backdrop-filter: blur(8px); border: 1px solid #2d3f55; border-radius: 24px; padding: 8px 20px; z-index: 999; }\n' +
+    '#slide-nav button { background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 8px; }\n' +
+    '#slide-nav button:hover { color: #e2e8f0; }\n' +
+    '#slide-nav .slide-label { font-size: 11px; color: #64748b; min-width: 50px; text-align: center; }\n';
+
+  const scrollCSS =
+    '.present-frame { width: 100%; }\n';
+
+  const slidesJS =
+    'var frames = Array.from(container.querySelectorAll(".present-frame"));\n' +
+    'var idx = 0;\n' +
+    'function showSlide(i) {\n' +
+    '  idx = Math.max(0, Math.min(i, frames.length - 1));\n' +
+    '  frames.forEach(function(f, n) { f.classList.toggle("slide-active", n === idx); });\n' +
+    '  document.getElementById("slide-count").textContent = (idx+1) + " / " + frames.length;\n' +
+    '  PresentRenderer.initAnimations({ querySelectorAll: function() { return [frames[idx]]; } }, "slides");\n' +
+    '  var anim = PresentRenderer.initAnimations(container, "slides");\n' +
+    '  anim.playFrame(idx);\n' +
+    '}\n' +
+    'document.addEventListener("keydown", function(e) { if (e.key==="ArrowRight"||e.key===" ") showSlide(idx+1); if (e.key==="ArrowLeft") showSlide(idx-1); });\n' +
+    'document.getElementById("prev-slide").onclick = function() { showSlide(idx-1); };\n' +
+    'document.getElementById("next-slide").onclick = function() { showSlide(idx+1); };\n' +
+    'showSlide(0);\n';
+
+  const slidesNavHTML =
+    '<div id="slide-nav">' +
+    '<button id="prev-slide">\u2190<\/button>' +
+    '<span class="slide-label" id="slide-count">1 / 1<\/span>' +
+    '<button id="next-slide">\u2192<\/button>' +
+    '<\/div>';
+
+  return '<!DOCTYPE html>\n' +
+    '<html lang="en">\n' +
+    '<head><meta charset="UTF-8"><title>' + (json.meta?.title || 'Presentation') + '<\/title>\n' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>\n' +
+    '<style>\n' + baseCSS + (isSlides ? slidesCSS : scrollCSS) + '<\/style>\n' +
+    '<\/head>\n' +
     '<body>\n' +
-    '<div id="root"></div>\n' +
+    '<div id="root"><\/div>\n' +
+    (isSlides ? slidesNavHTML : '') +
     '<script>\n' +
     rendererScript + '\n' +
     'var __json = ' + JSON.stringify(json) + ';\n' +
     'document.addEventListener("DOMContentLoaded", function() {\n' +
     '  var container = PresentRenderer.renderPresentation(__json);\n' +
     '  document.getElementById("root").appendChild(container);\n' +
-    '  PresentRenderer.initAnimations(container, "' + nav + '");\n' +
+    (isSlides ? slidesJS : '  PresentRenderer.initAnimations(container, "scroll");\n') +
     '});\n' +
     '<\/script>\n' +
-    '</body>\n' +
-    '</html>';
+    '<\/body>\n' +
+    '<\/html>';
 }
 
 // ── JSON write-back ─────────────────────────────────────────────────────────
