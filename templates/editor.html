@@ -1,1 +1,511 @@
-<h1>Editor coming soon</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Present Editor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+/* ── Reset + base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Top bar ── */
+#topbar {
+  height: 44px; background: #10141e; border-bottom: 1px solid #1e2a3a;
+  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; z-index: 100;
+}
+#topbar .title { font-size: 13px; color: #64748b; flex: 1; }
+#topbar button { background: #1e2a3a; border: 1px solid #2d3f55; color: #94a3b8; border-radius: 5px; padding: 5px 12px; font-size: 11px; cursor: pointer; }
+#topbar button:hover { background: #2d3f55; color: #e2e8f0; }
+#topbar button.primary { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+/* ── Body ── */
+#body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+/* ── Frame strip (floating left panel) ── */
+#frame-panel {
+  position: absolute; left: 12px; top: 12px; bottom: 12px;
+  width: 96px; background: rgba(13,17,23,0.92); border: 1px solid #1e2a3a;
+  border-radius: 10px; z-index: 50; display: flex; flex-direction: column;
+  overflow: hidden; backdrop-filter: blur(8px);
+}
+#frame-panel-header {
+  padding: 8px 10px; border-bottom: 1px solid #1e2a3a;
+  font-size: 9px; color: #334155; text-transform: uppercase; letter-spacing: 0.1em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+#frame-panel-toggle { cursor: pointer; color: #475569; font-size: 12px; }
+#frame-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.frame-thumb {
+  aspect-ratio: 16/9; background: #141820; border: 1.5px solid #1e2a3a;
+  border-radius: 4px; cursor: pointer; overflow: hidden; position: relative;
+  transition: border-color 0.15s; flex-shrink: 0;
+}
+.frame-thumb:hover { border-color: #4f46e5; }
+.frame-thumb.active { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+.frame-thumb-num { position: absolute; bottom: 2px; left: 4px; font-size: 7px; color: #475569; }
+
+/* ── Canvas ── */
+#canvas {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+  align-items: center; padding: 32px 24px 32px 124px; gap: 0;
+  background: #1a2030;
+  background-image: radial-gradient(circle, #253045 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ── Present root + frames ── */
+.present-root { width: 100%; max-width: 860px; display: flex; flex-direction: column; gap: 0; }
+
+.present-frame {
+  width: 100%; position: relative; overflow: hidden; border-radius: 10px;
+  border: 2px solid transparent; transition: border-color 0.15s; cursor: default;
+  margin-bottom: 16px;
+}
+.present-frame:hover { border-color: rgba(99,102,241,0.3); }
+.present-frame.frame-selected { border-color: #6366f1; }
+
+/* Layout types */
+.layout-hero {
+  padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; min-height: 400px;
+  align-items: flex-start; justify-content: center;
+}
+.layout-two-col {
+  display: grid; grid-template-columns: 1fr 1fr; min-height: 360px;
+}
+.layout-two-col .col-left, .layout-two-col .col-right {
+  padding: 48px 40px; display: flex; flex-direction: column; gap: 16px;
+}
+.layout-cards {
+  padding: 48px 48px; display: flex; flex-direction: column; gap: 24px; min-height: 360px;
+}
+.layout-text {
+  padding: 56px 64px; display: flex; flex-direction: column; gap: 20px;
+}
+.layout-image-full { min-height: 400px; display: flex; align-items: center; justify-content: center; }
+.layout-raw { min-height: 360px; }
+
+/* Default element styles */
+.present-frame h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }
+.present-frame h2 { font-size: 2rem; font-weight: 600; line-height: 1.25; }
+.present-frame p  { font-size: 1.1rem; line-height: 1.7; opacity: 0.8; }
+.present-frame ul { padding-left: 1.5em; display: flex; flex-direction: column; gap: 8px; }
+.present-frame li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }
+.present-button {
+  display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600;
+  font-size: 0.95rem; text-decoration: none; background: #4f46e5; color: white;
+  transition: opacity 0.2s;
+}
+
+/* Element selection highlight */
+[data-element-id] { cursor: pointer; border-radius: 3px; transition: outline 0.1s; }
+[data-element-id]:hover { outline: 1px dashed rgba(99,102,241,0.5); outline-offset: 4px; }
+[data-element-id].el-selected { outline: 2px solid #6366f1; outline-offset: 4px; }
+
+/* ── Status bar ── */
+#statusbar {
+  height: 28px; background: #0a0d14; border-top: 1px solid #1e2a3a;
+  display: flex; align-items: center; padding: 0 16px; gap: 12px;
+  font-size: 10px; color: #475569; flex-shrink: 0;
+}
+#status-selection { color: #6366f1; }
+
+/* ── Theme variants ── */
+.theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }
+.theme-light .present-frame { background: #ffffff; color: #0f172a; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <span class="title" id="pres-title">Loading...</span>
+  <button onclick="openPreview()">&#9654; Preview</button>
+</div>
+
+<!-- Body -->
+<div id="body">
+
+  <!-- Floating frame panel -->
+  <div id="frame-panel">
+    <div id="frame-panel-header">
+      Frames
+      <span id="frame-panel-toggle" onclick="togglePanel()" title="collapse">&times;</span>
+    </div>
+    <div id="frame-list"></div>
+  </div>
+
+  <!-- Scroll canvas -->
+  <div id="canvas"></div>
+</div>
+
+<!-- Status bar -->
+<div id="statusbar">
+  <span id="status-conn">Connecting...</span>
+  <span>|</span>
+  <span id="status-selection">No element selected</span>
+</div>
+
+<!-- Inline renderer -->
+<script>
+/* ======================================================
+   RENDERER (inlined from renderer.js)
+   ====================================================== */
+(function (root) {
+  'use strict';
+
+  function camelToKebab(str) {
+    return str
+      .replace(/^(webkit|moz|ms|o)([A-Z])/, (_, prefix, first) =>
+        '-' + prefix + '-' + first.toLowerCase()
+      )
+      .replace(/([A-Z])/g, (m) => '-' + m.toLowerCase());
+  }
+  function styleObjectToCSS(obj) {
+    if (!obj) return '';
+    return Object.entries(obj).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
+  }
+  function renderElement(el) {
+    const style = styleObjectToCSS(el.style);
+    const anim = el.animation || {};
+    const animIn = anim.in || {};
+    const animOut = anim.out || {};
+    const baseAttrs = [
+      `id="${el.id}"`,
+      `data-element-id="${el.id}"`,
+      `data-element-type="${el.type}"`,
+      animIn.effect    ? `data-anim-in="${animIn.effect}"` : '',
+      animIn.duration  != null ? `data-anim-in-duration="${animIn.duration}"` : '',
+      animIn.delay     != null ? `data-anim-in-delay="${animIn.delay}"` : '',
+      animOut.effect   ? `data-anim-out="${animOut.effect}"` : '',
+      animOut.duration != null ? `data-anim-out-duration="${animOut.duration}"` : '',
+      style            ? `style="${style}"` : '',
+    ].filter(Boolean).join(' ');
+    const content = el.content || '';
+    switch (el.type) {
+      case 'heading':    return `<h1 ${baseAttrs}>${content}</h1>`;
+      case 'subheading': return `<h2 ${baseAttrs}>${content}</h2>`;
+      case 'body':       return `<p ${baseAttrs}>${content}</p>`;
+      case 'image':      return `<img ${baseAttrs} src="${el.src||''}" alt="${el.alt||''}" />`;
+      case 'button':     return `<a ${baseAttrs} href="${el.href||'#'}" class="present-button">${content}</a>`;
+      case 'list': {
+        const items = (el.items||[]).map(i => `<li>${i}</li>`).join('');
+        return `<ul ${baseAttrs}>${items}</ul>`;
+      }
+      case 'divider':    return `<hr ${baseAttrs} />`;
+      default:           return `<div ${baseAttrs}>${content}</div>`;
+    }
+  }
+  function renderRawLayout(frame) {
+    const d = document.createElement('div'); d.className = 'layout-raw';
+    d.innerHTML = frame.rawHTML || ''; return d;
+  }
+  function makeLayout(cls) {
+    return (frame) => {
+      const d = document.createElement('div'); d.className = cls;
+      d.innerHTML = (frame.elements||[]).map(renderElement).join(''); return d;
+    };
+  }
+  function renderTwoColLayout(frame) {
+    const elements = frame.elements || [];
+    const mid = Math.ceil(elements.length / 2);
+    const d = document.createElement('div'); d.className = 'layout-two-col';
+    d.innerHTML = `<div class="col-left">${elements.slice(0,mid).map(renderElement).join('')}</div><div class="col-right">${elements.slice(mid).map(renderElement).join('')}</div>`;
+    return d;
+  }
+  const LAYOUTS = {
+    hero: makeLayout('layout-hero'), 'two-col': renderTwoColLayout,
+    cards: makeLayout('layout-cards'), text: makeLayout('layout-text'),
+    'image-full': makeLayout('layout-image-full'), raw: renderRawLayout,
+  };
+  function renderFrame(frame, index) {
+    const w = document.createElement('div');
+    w.className = 'present-frame'; w.id = frame.id;
+    w.dataset.frameIndex = String(index); w.dataset.layout = frame.layout;
+    if (frame.background) {
+      const bg = frame.background;
+      if (bg.type === 'color' || bg.type === 'gradient') w.style.background = bg.value;
+      else if (bg.type === 'image') { w.style.backgroundImage=`url(${bg.value})`; w.style.backgroundSize='cover'; w.style.backgroundPosition='center'; }
+    }
+    const renderer = LAYOUTS[frame.layout];
+    if (!renderer) console.warn(`[PresentRenderer] Unknown layout "${frame.layout}" on frame "${frame.id}", falling back to raw`);
+    w.appendChild((renderer || renderRawLayout)(frame));
+    return w;
+  }
+  function renderPresentation(json) {
+    const { meta={}, frames=[] } = json;
+    const c = document.createElement('div');
+    c.className = `present-root theme-${meta.theme||'dark'}`;
+    c.dataset.navigation = meta.navigation||'slides';
+    frames.forEach((f,i) => c.appendChild(renderFrame(f,i)));
+    return c;
+  }
+
+  // Animation
+  const PRESETS = {
+    fade:       { from:{opacity:0},            to:{opacity:1} },
+    'fly-up':   { from:{opacity:0,y:40},       to:{opacity:1,y:0} },
+    'fly-down': { from:{opacity:0,y:-40},      to:{opacity:1,y:0} },
+    'fly-left': { from:{opacity:0,x:60},       to:{opacity:1,x:0} },
+    'fly-right':{ from:{opacity:0,x:-60},      to:{opacity:1,x:0} },
+    'scale-in': { from:{opacity:0,scale:0.85}, to:{opacity:1,scale:1} },
+    'blur-in':  { from:{opacity:0,filter:'blur(12px)'}, to:{opacity:1,filter:'blur(0px)'} },
+    wipe:       { from:{clipPath:'inset(0 100% 0 0)'}, to:{clipPath:'inset(0 0% 0 0)'} },
+  };
+  function initAnimations(container, mode) {
+    function playIn(frameEl) {
+      frameEl.querySelectorAll('[data-anim-in]').forEach(el => {
+        const preset = PRESETS[el.dataset.animIn]; if (!preset || !root.gsap) return;
+        root.gsap.fromTo(el, preset.from, {
+          ...preset.to, duration: parseFloat(el.dataset.animInDuration)||0.6,
+          delay: parseFloat(el.dataset.animInDelay)||0, ease:'power2.out'
+        });
+      });
+    }
+    function playOut(frameIndex) {
+      const frameEl = container.querySelectorAll('.present-frame')[frameIndex];
+      if (!frameEl) return;
+      frameEl.querySelectorAll('[data-anim-out]').forEach(el => {
+        const preset = PRESETS[el.dataset.animOut]; if (!preset || !root.gsap) return;
+        root.gsap.fromTo(el, preset.to, {
+          ...preset.from, duration: parseFloat(el.dataset.animOutDuration)||0.3, ease:'power2.in'
+        });
+      });
+    }
+    if (mode === 'scroll' && typeof IntersectionObserver !== 'undefined') {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { playIn(e.target); obs.unobserve(e.target); }});
+      }, { threshold: 0.2 });
+      container.querySelectorAll('.present-frame').forEach(f => obs.observe(f));
+    }
+    return {
+      playFrame: (i) => { const f=container.querySelectorAll('.present-frame')[i]; if(f) playIn(f); },
+      playOut
+    };
+  }
+
+  root.PresentRenderer = { renderPresentation, renderFrame, renderElement, initAnimations };
+})(window);
+</script>
+
+<!-- Editor logic -->
+<script>
+let currentJSON = null;
+let selectedFrameId = null;
+let selectedElementId = null;
+let panelCollapsed = false;
+
+// ── Fetch + render ──────────────────────────────────────────────────────────
+
+async function loadAndRender() {
+  const res = await fetch('/presentation.json');
+  currentJSON = await res.json();
+  renderEditor(currentJSON);
+}
+
+function renderEditor(json) {
+  const { meta = {}, frames = [] } = json;
+  document.title = meta.title || 'Present';
+  document.getElementById('pres-title').textContent = meta.title || 'Untitled';
+
+  // Canvas
+  const canvas = document.getElementById('canvas');
+  canvas.innerHTML = '';
+  const root = PresentRenderer.renderPresentation(json);
+
+  // Wire element click -> selection
+  root.querySelectorAll('[data-element-id]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(el.closest('.present-frame').id, el.dataset.elementId);
+    });
+  });
+
+  // Wire frame click (deselect element)
+  root.querySelectorAll('.present-frame').forEach(f => {
+    f.addEventListener('click', () => selectFrame(f.id));
+  });
+
+  canvas.appendChild(root);
+
+  // Init animations (scroll mode by default in editor)
+  PresentRenderer.initAnimations(root, 'scroll');
+
+  // Frame strip
+  renderFrameStrip(frames);
+
+  // Restore selection highlight
+  if (selectedFrameId) highlightFrame(selectedFrameId);
+  if (selectedElementId) highlightElement(selectedElementId);
+}
+
+// ── Selection ───────────────────────────────────────────────────────────────
+
+function selectFrame(frameId) {
+  selectedFrameId = frameId;
+  selectedElementId = null;
+  highlightFrame(frameId);
+  clearElementHighlight();
+  updateStatus();
+  postSelection({ frameId });
+}
+
+function selectElement(frameId, elementId) {
+  selectedFrameId = frameId;
+  selectedElementId = elementId;
+  highlightFrame(frameId);
+  highlightElement(elementId);
+  updateStatus();
+  postSelection({ frameId, elementId });
+}
+
+function highlightFrame(frameId) {
+  document.querySelectorAll('.present-frame').forEach(f => f.classList.remove('frame-selected'));
+  document.querySelectorAll('.frame-thumb').forEach(t => t.classList.remove('active'));
+  const f = document.getElementById(frameId);
+  if (f) f.classList.add('frame-selected');
+  document.querySelectorAll('.frame-thumb').forEach(t => {
+    if (t.dataset.frameId === frameId) t.classList.add('active');
+  });
+}
+
+function highlightElement(elementId) {
+  document.querySelectorAll('[data-element-id]').forEach(el => el.classList.remove('el-selected'));
+  const el = document.querySelector(`[data-element-id="${elementId}"]`);
+  if (el) el.classList.add('el-selected');
+}
+
+function clearElementHighlight() {
+  document.querySelectorAll('[data-element-id]').forEach(el => el.classList.remove('el-selected'));
+}
+
+function updateStatus() {
+  const sel = document.getElementById('status-selection');
+  if (selectedElementId) {
+    const el = currentJSON?.frames
+      .flatMap(f => f.elements || [])
+      .find(e => e.id === selectedElementId);
+    sel.textContent = `Selected: ${el?.type || 'element'} #${selectedElementId} in ${selectedFrameId}`;
+  } else if (selectedFrameId) {
+    sel.textContent = `Frame selected: ${selectedFrameId}`;
+  } else {
+    sel.textContent = 'No element selected';
+  }
+}
+
+async function postSelection(data) {
+  try {
+    await fetch('/selection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch (e) { /* server may not be running */ }
+}
+
+// ── Frame strip ─────────────────────────────────────────────────────────────
+
+function renderFrameStrip(frames) {
+  const list = document.getElementById('frame-list');
+  list.innerHTML = '';
+  frames.forEach((frame, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'frame-thumb';
+    thumb.dataset.frameId = frame.id;
+
+    // Mini preview background
+    if (frame.background) {
+      const bg = frame.background;
+      if (bg.type === 'color' || bg.type === 'gradient') thumb.style.background = bg.value;
+    }
+
+    const num = document.createElement('span');
+    num.className = 'frame-thumb-num';
+    num.textContent = i + 1;
+    thumb.appendChild(num);
+
+    thumb.addEventListener('click', () => {
+      const frameEl = document.getElementById(frame.id);
+      if (frameEl) { frameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      selectFrame(frame.id);
+    });
+
+    list.appendChild(thumb);
+  });
+}
+
+function togglePanel() {
+  const panel = document.getElementById('frame-panel');
+  panelCollapsed = !panelCollapsed;
+  panel.style.display = panelCollapsed ? 'none' : 'flex';
+}
+
+// ── SSE hot-reload ───────────────────────────────────────────────────────────
+
+function connectSSE() {
+  const es = new EventSource('/events');
+  es.onopen = () => {
+    document.getElementById('status-conn').textContent = '\u25cf Live';
+    document.getElementById('status-conn').style.color = '#22c55e';
+  };
+  es.onmessage = (e) => {
+    if (e.data === 'reload') loadAndRender();
+  };
+  es.onerror = () => {
+    document.getElementById('status-conn').textContent = '\u25cb Disconnected';
+    document.getElementById('status-conn').style.color = '#ef4444';
+    es.close();
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+
+function openPreview() {
+  if (!currentJSON) return;
+  const html = buildPreviewHTML(currentJSON);
+  const blob = new Blob([html], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+function buildPreviewHTML(json) {
+  const nav = json.meta && json.meta.navigation ? json.meta.navigation : 'slides';
+  const title = json.meta && json.meta.title ? json.meta.title : 'Presentation';
+  return '<!DOCTYPE html>\n' +
+    '<html lang="en">\n' +
+    '<head><meta charset="UTF-8"><title>' + title + '</title>\n' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><' + '/script>\n' +
+    '<style>\n' +
+    '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n' +
+    'body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif; }\n' +
+    '.present-frame { width: 100%; ' + (nav === 'slides' ? 'height: 100vh;' : 'min-height: 100vh;') + ' }\n' +
+    '.layout-hero { padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }\n' +
+    '.layout-two-col { display: grid; grid-template-columns: 1fr 1fr; min-height: 100%; }\n' +
+    '.layout-two-col .col-left, .layout-two-col .col-right { padding: 48px 40px; display: flex; flex-direction: column; gap: 16px; }\n' +
+    '.layout-cards { padding: 48px; display: flex; flex-direction: column; gap: 24px; }\n' +
+    '.layout-text { padding: 56px 64px; display: flex; flex-direction: column; gap: 20px; }\n' +
+    '.layout-raw { min-height: 100vh; }\n' +
+    'h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; }\n' +
+    'h2 { font-size: 2rem; font-weight: 600; }\n' +
+    'p  { font-size: 1.1rem; line-height: 1.7; opacity: 0.8; }\n' +
+    'ul { padding-left: 1.5em; } li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }\n' +
+    '.present-button { display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600; text-decoration: none; background: #4f46e5; color: white; }\n' +
+    '</style>\n' +
+    '</head>\n' +
+    '<body>\n' +
+    '<div id="root"></div>\n' +
+    '<script>\n' +
+    'const json = ' + JSON.stringify(json) + ';\n' +
+    '<' + '/script>\n' +
+    '</body>\n' +
+    '</html>';
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+loadAndRender();
+connectSSE();
+</script>
+</body>
+</html>
