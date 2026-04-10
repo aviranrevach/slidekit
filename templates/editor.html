@@ -264,9 +264,9 @@ body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, BlinkMac
       });
     }
     function playOut(frameIndex) {
-      const frameEl = container.querySelectorAll('.present-frame')[frameIndex];
+      var frameEl = container.querySelectorAll('.present-frame')[frameIndex];
       if (!frameEl) return;
-      frameEl.querySelectorAll('[data-anim-out]').forEach(el => {
+      frameEl.querySelectorAll('[data-anim-out]').forEach(function(el) {
         const preset = PRESETS[el.dataset.animOut]; if (!preset || !root.gsap) return;
         root.gsap.fromTo(el, preset.to, {
           ...preset.from, duration: parseFloat(el.dataset.animOutDuration)||0.3, ease:'power2.in'
@@ -470,34 +470,44 @@ function openPreview() {
 }
 
 function buildPreviewHTML(json) {
-  const nav = json.meta && json.meta.navigation ? json.meta.navigation : 'slides';
-  const title = json.meta && json.meta.title ? json.meta.title : 'Presentation';
+  const nav = json.meta?.navigation || 'slides';
+  // Grab the inlined renderer source by extracting the IIFE from the first script block
+  const rendererScript = document.querySelector('script:not([src])').textContent;
   return '<!DOCTYPE html>\n' +
     '<html lang="en">\n' +
-    '<head><meta charset="UTF-8"><title>' + title + '</title>\n' +
-    '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><' + '/script>\n' +
+    '<head><meta charset="UTF-8"><title>' + (json.meta?.title || 'Presentation') + '</title>\n' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>\n' +
     '<style>\n' +
     '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n' +
-    'body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif; }\n' +
-    '.present-frame { width: 100%; ' + (nav === 'slides' ? 'height: 100vh;' : 'min-height: 100vh;') + ' }\n' +
-    '.layout-hero { padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }\n' +
+    'body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif; overflow-x: hidden; }\n' +
+    '.present-frame { width: 100%; ' + (nav === 'slides' ? 'height: 100vh; overflow: hidden;' : 'min-height: 100vh;') + ' }\n' +
+    '.layout-hero { padding: 72px 64px; display: flex; flex-direction: column; gap: 20px; justify-content: center; min-height: 100%; }\n' +
     '.layout-two-col { display: grid; grid-template-columns: 1fr 1fr; min-height: 100%; }\n' +
     '.layout-two-col .col-left, .layout-two-col .col-right { padding: 48px 40px; display: flex; flex-direction: column; gap: 16px; }\n' +
-    '.layout-cards { padding: 48px; display: flex; flex-direction: column; gap: 24px; }\n' +
-    '.layout-text { padding: 56px 64px; display: flex; flex-direction: column; gap: 20px; }\n' +
+    '.layout-cards { padding: 48px; display: flex; flex-direction: column; gap: 24px; min-height: 100%; }\n' +
+    '.layout-text { padding: 56px 64px; display: flex; flex-direction: column; gap: 20px; min-height: 100%; }\n' +
+    '.layout-image-full { min-height: 100vh; display: flex; align-items: center; justify-content: center; }\n' +
     '.layout-raw { min-height: 100vh; }\n' +
-    'h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; }\n' +
-    'h2 { font-size: 2rem; font-weight: 600; }\n' +
+    '.theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }\n' +
+    '.theme-light .present-frame { background: #ffffff; color: #0f172a; }\n' +
+    'h1 { font-size: 3rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.03em; }\n' +
+    'h2 { font-size: 2rem; font-weight: 600; line-height: 1.25; }\n' +
     'p  { font-size: 1.1rem; line-height: 1.7; opacity: 0.8; }\n' +
-    'ul { padding-left: 1.5em; } li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }\n' +
+    'ul { padding-left: 1.5em; display: flex; flex-direction: column; gap: 8px; } li { font-size: 1rem; line-height: 1.6; opacity: 0.85; }\n' +
     '.present-button { display: inline-block; padding: 12px 28px; border-radius: 6px; font-weight: 600; text-decoration: none; background: #4f46e5; color: white; }\n' +
     '</style>\n' +
     '</head>\n' +
     '<body>\n' +
     '<div id="root"></div>\n' +
     '<script>\n' +
-    'const json = ' + JSON.stringify(json) + ';\n' +
-    '<' + '/script>\n' +
+    rendererScript + '\n' +
+    'var __json = ' + JSON.stringify(json) + ';\n' +
+    'document.addEventListener("DOMContentLoaded", function() {\n' +
+    '  var container = PresentRenderer.renderPresentation(__json);\n' +
+    '  document.getElementById("root").appendChild(container);\n' +
+    '  PresentRenderer.initAnimations(container, "' + nav + '");\n' +
+    '});\n' +
+    '<\/script>\n' +
     '</body>\n' +
     '</html>';
 }
