@@ -15,12 +15,26 @@ const EDITOR_HTML       = path.join(TEMPLATES, 'editor.html');
 
 const sseClients = new Set();
 
-// Watch presentation.json — push reload event to all SSE clients
-fs.watch(PRESENTATION_JSON, () => {
-  const msg = 'data: reload\n\n';
-  sseClients.forEach((res) => {
-    try { res.write(msg); } catch { sseClients.delete(res); }
-  });
+// Verify presentation.json exists before watching
+if (!fs.existsSync(PRESENTATION_JSON)) {
+  console.error(`Error: presentation.json not found at ${PRESENTATION_JSON}`);
+  console.error(`Usage: node server.js <project-dir>`);
+  process.exit(1);
+}
+
+let reloadTimer = null;
+const watcher = fs.watch(PRESENTATION_JSON, () => {
+  if (reloadTimer) return;
+  reloadTimer = setTimeout(() => {
+    reloadTimer = null;
+    const msg = 'data: reload\n\n';
+    sseClients.forEach((res) => {
+      try { res.write(msg); } catch { sseClients.delete(res); }
+    });
+  }, 50);
+});
+watcher.on('error', (err) => {
+  console.error('[present] Watch error:', err.message);
 });
 
 function cors(res) {
@@ -79,9 +93,22 @@ const server = http.createServer((req, res) => {
 
   // Write selection.json (POST from editor on element click)
   if (req.method === 'POST' && req.url === '/selection') {
+    const MAX_BODY = 65_536;
     let body = '';
-    req.on('data', (chunk) => (body += chunk));
+    let overflow = false;
+    req.on('data', (chunk) => {
+      if (overflow) return;
+      body += chunk;
+      if (body.length > MAX_BODY) {
+        overflow = true;
+        cors(res);
+        res.writeHead(413);
+        res.end('payload too large');
+        req.resume();
+      }
+    });
     req.on('end', () => {
+      if (overflow) return;
       try {
         JSON.parse(body); // validate
         fs.writeFileSync(SELECTION_JSON, body);
