@@ -93,6 +93,7 @@ const server = http.createServer((req, res) => {
 
   // Write full presentation.json (POST from editor on any structural change)
   if (req.method === 'POST' && req.url === '/json') {
+    req.setEncoding('utf8');
     const MAX_JSON = 10 * 1024 * 1024; // 10 MB
     let body = '';
     let overflow = false;
@@ -126,6 +127,7 @@ const server = http.createServer((req, res) => {
 
   // Write selection.json (POST from editor on element click)
   if (req.method === 'POST' && req.url === '/selection') {
+    req.setEncoding('utf8');
     const MAX_BODY = 65_536;
     let body = '';
     let overflow = false;
