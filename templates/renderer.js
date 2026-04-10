@@ -121,7 +121,7 @@
 
   // ── Frame renderer ───────────────────────────────────────────────────────────
 
-  function renderFrame(frame, index, meta) {
+  function renderFrame(frame, index) {
     const wrapper = document.createElement('div');
     wrapper.className = 'present-frame';
     wrapper.id = frame.id;
@@ -154,7 +154,7 @@
     const container = document.createElement('div');
     container.className = `present-root theme-${meta.theme || 'dark'}`;
     container.dataset.navigation = meta.navigation || 'slides';
-    frames.forEach((frame, i) => container.appendChild(renderFrame(frame, i, meta)));
+    frames.forEach((frame, i) => container.appendChild(renderFrame(frame, i)));
     return container;
   }
 
@@ -190,8 +190,10 @@
       });
     }
 
-    function playOut(frameEl) {
-      getAnimElements(frameEl).forEach((el) => {
+    function playOut(frameIndex) {
+      const frame = container.querySelectorAll('.present-frame')[frameIndex];
+      if (!frame) return;
+      getAnimElements(frame).forEach((el) => {
         const effect   = el.dataset.animOut;
         const duration = parseFloat(el.dataset.animOutDuration) || 0.3;
         const preset   = ANIM_PRESETS[effect];
@@ -202,10 +204,8 @@
     }
 
     function playFrame(frameIndex) {
-      const frames = container.querySelectorAll('.present-frame');
-      frames.forEach((f, i) => {
-        if (i === frameIndex) playIn(f);
-      });
+      const frame = container.querySelectorAll('.present-frame')[frameIndex];
+      if (frame) playIn(frame);
     }
 
     // Scroll mode: use IntersectionObserver
