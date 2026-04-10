@@ -295,6 +295,7 @@ let currentJSON = null;
 let selectedFrameId = null;
 let selectedElementId = null;
 let panelCollapsed = false;
+let pendingWrites = 0;
 
 // ── Fetch + render ──────────────────────────────────────────────────────────
 
@@ -451,7 +452,7 @@ function connectSSE() {
   };
   es.onmessage = (e) => {
     if (e.data === 'reload') {
-      if (skipNextReload) { skipNextReload = false; return; }
+      if (pendingWrites > 0) { pendingWrites--; return; }
       loadAndRender();
     }
   };
@@ -517,10 +518,8 @@ function buildPreviewHTML(json) {
 
 // ── JSON write-back ─────────────────────────────────────────────────────────
 
-let skipNextReload = false;
-
 async function writeJSON(json) {
-  skipNextReload = true;
+  pendingWrites++;
   currentJSON = json;
   try {
     await fetch('/json', {
