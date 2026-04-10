@@ -450,7 +450,10 @@ function connectSSE() {
     document.getElementById('status-conn').style.color = '#22c55e';
   };
   es.onmessage = (e) => {
-    if (e.data === 'reload') loadAndRender();
+    if (e.data === 'reload') {
+      if (skipNextReload) { skipNextReload = false; return; }
+      loadAndRender();
+    }
   };
   es.onerror = () => {
     document.getElementById('status-conn').textContent = '\u25cb Disconnected';
@@ -510,6 +513,35 @@ function buildPreviewHTML(json) {
     '<\/script>\n' +
     '</body>\n' +
     '</html>';
+}
+
+// ── JSON write-back ─────────────────────────────────────────────────────────
+
+let skipNextReload = false;
+
+async function writeJSON(json) {
+  skipNextReload = true;
+  currentJSON = json;
+  try {
+    await fetch('/json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(json, null, 2),
+    });
+  } catch (e) { /* server may not be running */ }
+  renderEditor(json);
+}
+
+function getFrame(frameId) {
+  return currentJSON.frames.find(f => f.id === frameId);
+}
+
+function updateFrame(frameId, patch) {
+  const json = JSON.parse(JSON.stringify(currentJSON)); // deep clone
+  const frame = json.frames.find(f => f.id === frameId);
+  if (!frame) return;
+  Object.assign(frame, patch);
+  writeJSON(json);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
