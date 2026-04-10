@@ -158,9 +158,76 @@
     return container;
   }
 
+  // ── Animation system ─────────────────────────────────────────────────────────
+
+  const ANIM_PRESETS = {
+    fade:       { from: { opacity: 0 },            to: { opacity: 1 } },
+    'fly-up':   { from: { opacity: 0, y: 40 },     to: { opacity: 1, y: 0 } },
+    'fly-down': { from: { opacity: 0, y: -40 },    to: { opacity: 1, y: 0 } },
+    'fly-left': { from: { opacity: 0, x: 60 },     to: { opacity: 1, x: 0 } },
+    'fly-right':{ from: { opacity: 0, x: -60 },    to: { opacity: 1, x: 0 } },
+    'scale-in': { from: { opacity: 0, scale: 0.85 }, to: { opacity: 1, scale: 1 } },
+    'blur-in':  { from: { opacity: 0, filter: 'blur(12px)' }, to: { opacity: 1, filter: 'blur(0px)' } },
+    wipe:       { from: { clipPath: 'inset(0 100% 0 0)' }, to: { clipPath: 'inset(0 0% 0 0)' } },
+  };
+
+  function initAnimations(container, mode) {
+    const gsap = root.gsap;
+
+    function getAnimElements(frameEl) {
+      return Array.from(frameEl.querySelectorAll('[data-anim-in], [data-anim-out]'));
+    }
+
+    function playIn(frameEl) {
+      getAnimElements(frameEl).forEach((el) => {
+        const effect   = el.dataset.animIn;
+        const duration = parseFloat(el.dataset.animInDuration) || 0.6;
+        const delay    = parseFloat(el.dataset.animInDelay)    || 0;
+        const preset   = ANIM_PRESETS[effect];
+        if (preset && gsap) {
+          gsap.fromTo(el, preset.from, { ...preset.to, duration, delay, ease: 'power2.out' });
+        }
+      });
+    }
+
+    function playOut(frameEl) {
+      getAnimElements(frameEl).forEach((el) => {
+        const effect   = el.dataset.animOut;
+        const duration = parseFloat(el.dataset.animOutDuration) || 0.3;
+        const preset   = ANIM_PRESETS[effect];
+        if (preset && gsap) {
+          gsap.fromTo(el, preset.to, { ...preset.from, duration, ease: 'power2.in' });
+        }
+      });
+    }
+
+    function playFrame(frameIndex) {
+      const frames = container.querySelectorAll('.present-frame');
+      frames.forEach((f, i) => {
+        if (i === frameIndex) playIn(f);
+      });
+    }
+
+    // Scroll mode: use IntersectionObserver
+    if (mode === 'scroll' && typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            playIn(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2 });
+
+      container.querySelectorAll('.present-frame').forEach((f) => observer.observe(f));
+    }
+
+    return { playFrame, playOut };
+  }
+
   // ── Export ───────────────────────────────────────────────────────────────────
 
-  const PresentRenderer = { renderPresentation, renderFrame, renderElement };
+  const PresentRenderer = { renderPresentation, renderFrame, renderElement, initAnimations };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = PresentRenderer;           // CJS require() context

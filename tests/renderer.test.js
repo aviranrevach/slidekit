@@ -72,3 +72,19 @@ test('renderElement - vendor prefix camelCase converts correctly', () => {
   assert.ok(html.includes('-webkit-transform: translateX(10px)'), 'lowercase webkit prefix');
   assert.ok(html.includes('-webkit-backdrop-filter: blur(8px)'), 'uppercase Webkit prefix');
 });
+
+test('initAnimations - returns animator with playFrame method', () => {
+  const R = loadRenderer();
+  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { runScripts: 'dangerously' });
+  // Mock GSAP
+  dom.window.gsap = {
+    fromTo: () => {},
+    set: () => {},
+    timeline: () => ({ fromTo: () => ({}), add: () => ({}) }),
+  };
+  const src = readFileSync(new URL('../templates/renderer.js', import.meta.url), 'utf8');
+  dom.window.eval(src);
+  const animator = dom.window.PresentRenderer.initAnimations(dom.window.document.body, 'slides');
+  assert.equal(typeof animator.playFrame, 'function');
+  assert.equal(typeof animator.playOut, 'function');
+});
