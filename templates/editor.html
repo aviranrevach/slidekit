@@ -822,6 +822,7 @@ async function writeJSON(json) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(json, null, 2),
     });
+    pendingWrites--;
   } catch (e) { pendingWrites--; /* server may not be running */ }
   renderEditor(json);
 }
@@ -900,6 +901,7 @@ function renderInspector(elementId) {
   animSection.appendChild(makeAnimEffectField(animOut.effect || '', (v) => updateAnimOut(elementId, 'effect', v || undefined)));
   const outRow = document.createElement('div'); outRow.className = 'anim-row';
   outRow.appendChild(wrapField('Duration', makeNumInput(animOut.duration ?? '', (v) => updateAnimOut(elementId, 'duration', v))));
+  outRow.appendChild(wrapField('Delay', makeNumInput(animOut.delay ?? '', (v) => updateAnimOut(elementId, 'delay', v))));
   animSection.appendChild(outRow);
 
   content.appendChild(animSection);
@@ -930,7 +932,10 @@ function makeColorField(label, value, onChange) {
   swatch.style.cssText = 'width:28px;height:28px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none;';
   const text = document.createElement('input'); text.type = 'text'; text.value = value; text.style.flex = '1';
   swatch.addEventListener('input', () => { text.value = swatch.value; onChange(swatch.value); });
-  text.addEventListener('change', () => onChange(text.value));
+  text.addEventListener('change', () => {
+    if (/^#[0-9a-f]{3,6}$/i.test(text.value)) swatch.value = text.value;
+    onChange(text.value);
+  });
   row.appendChild(swatch); row.appendChild(text);
   f.appendChild(lbl); f.appendChild(row);
   return f;
