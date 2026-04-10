@@ -1,0 +1,206 @@
+<h2>Icon Set — Revised</h2>
+<p class="subtitle">Lucide-style icons, consistent 16px stroke-1.7. Hover for tooltip labels.</p>
+
+<style>
+  .icon-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .icon-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: #13141a; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 7px; padding: 12px 14px; min-width: 72px;
+    position: relative; cursor: default;
+  }
+  .icon-item svg { color: #8a8a9a; }
+  .icon-item span { font-size: 9px; color: #52535e; text-align: center; font-family: monospace; }
+  .icon-item .use { font-size: 8px; color: #3e3e4a; text-align: center; }
+
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; margin-bottom: 12px; margin-top: 24px; }
+
+  /* Toolbar demo */
+  .toolbar-demo {
+    display: inline-flex; align-items: center; gap: 2px;
+    background: rgba(13,14,18,0.92);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 3px;
+    margin-top: 4px;
+  }
+  .tb-demo {
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border-radius: 4px; color: #8a8a9a; cursor: default; position: relative;
+  }
+  .tb-demo:hover { background: rgba(255,255,255,0.06); color: #e8e8ec; }
+  .tb-demo:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1); color: #e8e8ec;
+    font-size: 10px; padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; font-family: -apple-system, sans-serif;
+  }
+  .tb-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+  /* Topbar demo */
+  .topbar-demo {
+    background: #0d0e12; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 0 14px; height: 42px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    margin-top: 4px;
+  }
+  .seg { background: #13141a; border-radius: 6px; padding: 3px; display: flex; }
+  .seg-opt { border: none; background: transparent; cursor: default; border-radius: 4px; font-size: 11px; font-weight: 500; color: #52535e; padding: 4px 10px; display: flex; align-items: center; gap: 5px; }
+  .seg-opt.on { background: #1e1f28; color: #e8e8ec; font-weight: 600; }
+  .btn { display: flex; align-items: center; gap: 5px; border-radius: 5px; font-size: 11px; font-weight: 500; cursor: default; border: none; padding: 5px 12px; }
+  .btn-sec { background: transparent; border: 1px solid rgba(255,255,255,0.1) !important; color: #8a8a9a; }
+  .btn-pri { background: #5e6ad2; color: white; }
+  .title { font-size: 12px; color: #52535e; font-weight: 500; flex: 1; }
+</style>
+
+<div class="section-title">Toolbar Icons (icon-only + tooltip on hover)</div>
+<div class="icon-grid">
+
+  <!-- Regen: proper RefreshCw -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10"/>
+      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+    </svg>
+    <span>Regen</span>
+    <span class="use">RefreshCw</span>
+  </div>
+
+  <!-- Layout: LayoutGrid -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+    </svg>
+    <span>Layout</span>
+    <span class="use">LayoutGrid</span>
+  </div>
+
+  <!-- Hide: Eye -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+    <span>Hide</span>
+    <span class="use">Eye</span>
+  </div>
+
+  <!-- Duplicate: Copy -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+    <span>Duplicate</span>
+    <span class="use">Copy</span>
+  </div>
+
+  <!-- Delete: Trash2 -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6m4-6v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+    <span>Delete</span>
+    <span class="use">Trash2</span>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;">
+  <div class="toolbar-demo">
+    <div class="tb-demo" data-tip="Regenerate frame">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </div>
+    <div class="tb-demo" data-tip="Change layout">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </div>
+    <div class="tb-demo" data-tip="Hide frame">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <div class="tb-demo" data-tip="Duplicate frame">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-demo" data-tip="Delete frame" style="color:rgba(239,68,68,0.6);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </div>
+  </div>
+  <p style="font-size:10px; color:#3e3e4a; margin-top:6px;">↑ Hover each icon to see tooltip</p>
+</div>
+
+<div class="section-title">Topbar Icons (icon + label)</div>
+<div class="icon-grid">
+
+  <!-- Scroll: AlignJustify -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/>
+      <line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/>
+    </svg>
+    <span>Scroll</span>
+    <span class="use">AlignJustify</span>
+  </div>
+
+  <!-- Frame: Monitor -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    <span>Frame</span>
+    <span class="use">Monitor</span>
+  </div>
+
+  <!-- Export: Download -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span>Export</span>
+    <span class="use">Download</span>
+  </div>
+
+  <!-- Preview: Play -->
+  <div class="icon-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <polygon points="10,8 16,12 10,16"/>
+    </svg>
+    <span>Preview</span>
+    <span class="use">PlayCircle</span>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;">
+  <div class="topbar-demo">
+    <span class="title">my-presentation</span>
+    <div class="seg">
+      <button class="seg-opt on">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+        Scroll
+      </button>
+      <button class="seg-opt">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Frame
+      </button>
+    </div>
+    <button class="btn btn-sec">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button class="btn btn-pri">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+      Preview
+    </button>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center; margin-top:24px;">Good to go? I'll write the spec and implementation plan next.</p>

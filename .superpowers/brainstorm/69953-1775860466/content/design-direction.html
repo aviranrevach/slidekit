@@ -1,0 +1,125 @@
+<h2>Current vs. Linear Design Direction</h2>
+<p class="subtitle">The current editor uses blue-gray tones. Linear uses near-black with violet accents and almost invisible borders. Which direction feels right?</p>
+
+<div class="split" style="gap: 24px; align-items: stretch;">
+
+  <!-- Current -->
+  <div class="mockup" data-choice="current" onclick="toggleSelect(this)" style="cursor:pointer; border: 2px solid transparent; transition: border-color 0.2s;">
+    <div class="mockup-header" style="background:#10141e; color:#64748b; font-size:11px; letter-spacing:0.08em; padding:8px 14px; border-bottom:1px solid #1e2a3a;">CURRENT — Blue-Gray Dark</div>
+    <div class="mockup-body" style="background:#0f1117; padding:0; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+
+      <!-- Topbar -->
+      <div style="background:#10141e; border-bottom:1px solid #1e2a3a; padding:8px 14px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:11px; color:#64748b;">my-presentation</span>
+        <span style="flex:1"></span>
+        <span style="background:#1e2a3a; border:1px solid #2d3f55; color:#94a3b8; border-radius:5px; padding:3px 10px; font-size:10px;">Scroll</span>
+        <span style="background:#1e2a3a; border:1px solid #2d3f55; color:#94a3b8; border-radius:5px; padding:3px 10px; font-size:10px;">Frame</span>
+        <span style="background:#4f46e5; border:1px solid #4f46e5; color:white; border-radius:5px; padding:3px 10px; font-size:10px;">Preview</span>
+      </div>
+
+      <!-- Canvas area -->
+      <div style="background:#1a2030; background-image:radial-gradient(circle, #253045 1px, transparent 1px); background-size:18px 18px; padding:16px 14px 16px 60px; display:flex; gap:12px; min-height:120px;">
+
+        <!-- Frame panel -->
+        <div style="position:absolute; background:rgba(13,17,23,0.92); border:1px solid #1e2a3a; border-radius:8px; padding:6px; width:40px; margin-left:-52px;">
+          <div style="aspect-ratio:16/9; background:#141820; border:1.5px solid #4f46e5; border-radius:3px; margin-bottom:4px;"></div>
+          <div style="aspect-ratio:16/9; background:#141820; border:1.5px solid #1e2a3a; border-radius:3px; margin-bottom:4px;"></div>
+          <div style="aspect-ratio:16/9; background:#141820; border:1.5px solid #1e2a3a; border-radius:3px;"></div>
+        </div>
+
+        <!-- Frame -->
+        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:8px; border:2px solid #6366f1; padding:14px; flex:1;">
+          <div style="font-size:14px; font-weight:700; color:#fff; letter-spacing:-0.03em; margin-bottom:4px;">The Big Idea</div>
+          <div style="font-size:9px; color:rgba(255,255,255,0.5);">Subtitle text goes here</div>
+        </div>
+
+        <!-- Inspector -->
+        <div style="background:#10141e; border:1px solid #1e2a3a; border-radius:6px; padding:8px; width:80px; font-size:9px; color:#64748b;">
+          <div style="color:#94a3b8; margin-bottom:4px; font-size:8px; text-transform:uppercase; letter-spacing:0.1em;">Inspector</div>
+          <div style="color:#475569; margin-bottom:3px;">Font size</div>
+          <div style="background:#1e2a3a; border-radius:3px; padding:2px 5px; color:#94a3b8; margin-bottom:6px;">72px</div>
+          <div style="color:#475569; margin-bottom:3px;">Color</div>
+          <div style="display:flex; gap:3px; align-items:center;">
+            <div style="width:12px; height:12px; background:#fff; border-radius:2px;"></div>
+            <span style="color:#94a3b8;">#fff</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color swatches -->
+      <div style="padding:8px 14px; border-top:1px solid #1e2a3a; display:flex; gap:6px; align-items:center;">
+        <span style="font-size:9px; color:#475569; margin-right:4px;">Palette</span>
+        <div style="width:14px;height:14px;border-radius:3px;background:#0f1117;border:1px solid #334155;" title="#0f1117 body"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#10141e;border:1px solid #334155;" title="#10141e topbar"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#1a2030;border:1px solid #334155;" title="#1a2030 canvas"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#1e2a3a;border:1px solid #334155;" title="#1e2a3a surface"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#2d3f55;border:1px solid #334155;" title="#2d3f55 border"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#4f46e5;" title="#4f46e5 accent"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#6366f1;" title="#6366f1 accent-hi"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Linear -->
+  <div class="mockup" data-choice="linear" onclick="toggleSelect(this)" style="cursor:pointer; border: 2px solid transparent; transition: border-color 0.2s;">
+    <div class="mockup-header" style="background:#0d0e12; color:#52535e; font-size:11px; letter-spacing:0.08em; padding:8px 14px; border-bottom:1px solid rgba(255,255,255,0.06);">LINEAR — Near-Black + Violet</div>
+    <div class="mockup-body" style="background:#08090d; padding:0; font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">
+
+      <!-- Topbar -->
+      <div style="background:#0d0e12; border-bottom:1px solid rgba(255,255,255,0.06); padding:8px 14px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:11px; color:#52535e;">my-presentation</span>
+        <span style="flex:1"></span>
+        <!-- Segmented control Linear style -->
+        <div style="background:#13141a; border-radius:6px; padding:2px; display:flex; gap:0;">
+          <span style="background:#1e1f28; color:#e8e8ec; border-radius:4px; padding:3px 10px; font-size:10px; font-weight:600;">Scroll</span>
+          <span style="color:#52535e; padding:3px 10px; font-size:10px;">Frame</span>
+        </div>
+        <span style="background:#5e6ad2; color:white; border-radius:5px; padding:3px 10px; font-size:10px; font-weight:500;">Preview</span>
+      </div>
+
+      <!-- Canvas area -->
+      <div style="background:#08090d; background-image:radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px); background-size:20px 20px; padding:16px 14px 16px 60px; display:flex; gap:12px; min-height:120px;">
+
+        <!-- Frame panel -->
+        <div style="position:absolute; background:rgba(8,9,13,0.95); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:6px; width:40px; margin-left:-52px;">
+          <div style="aspect-ratio:16/9; background:#13141a; border:1px solid #5e6ad2; border-radius:3px; margin-bottom:4px; box-shadow:0 0 0 2px rgba(94,106,210,0.2);"></div>
+          <div style="aspect-ratio:16/9; background:#13141a; border:1px solid rgba(255,255,255,0.06); border-radius:3px; margin-bottom:4px;"></div>
+          <div style="aspect-ratio:16/9; background:#13141a; border:1px solid rgba(255,255,255,0.06); border-radius:3px;"></div>
+        </div>
+
+        <!-- Frame -->
+        <div style="background:linear-gradient(135deg,#0f1020,#0a0c1a); border-radius:8px; border:1.5px solid rgba(94,106,210,0.4); padding:14px; flex:1; box-shadow:0 0 0 1px rgba(94,106,210,0.1);">
+          <div style="font-size:14px; font-weight:700; color:#f2f2f5; letter-spacing:-0.03em; margin-bottom:4px;">The Big Idea</div>
+          <div style="font-size:9px; color:rgba(255,255,255,0.3);">Subtitle text goes here</div>
+        </div>
+
+        <!-- Inspector -->
+        <div style="background:#0d0e12; border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px; width:80px; font-size:9px; color:#52535e;">
+          <div style="color:#8a8a9a; margin-bottom:4px; font-size:8px; text-transform:uppercase; letter-spacing:0.1em;">Inspector</div>
+          <div style="color:#3e3e4a; margin-bottom:3px;">Font size</div>
+          <div style="background:#13141a; border:1px solid rgba(255,255,255,0.06); border-radius:3px; padding:2px 5px; color:#8a8a9a; margin-bottom:6px;">72px</div>
+          <div style="color:#3e3e4a; margin-bottom:3px;">Color</div>
+          <div style="display:flex; gap:3px; align-items:center;">
+            <div style="width:12px; height:12px; background:#f2f2f5; border-radius:2px;"></div>
+            <span style="color:#8a8a9a;">#f2f2f5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color swatches -->
+      <div style="padding:8px 14px; border-top:1px solid rgba(255,255,255,0.06); display:flex; gap:6px; align-items:center;">
+        <span style="font-size:9px; color:#3e3e4a; margin-right:4px;">Palette</span>
+        <div style="width:14px;height:14px;border-radius:3px;background:#08090d;border:1px solid rgba(255,255,255,0.1);" title="#08090d body"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#0d0e12;border:1px solid rgba(255,255,255,0.1);" title="#0d0e12 topbar"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#13141a;border:1px solid rgba(255,255,255,0.1);" title="#13141a surface"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#1e1f28;border:1px solid rgba(255,255,255,0.1);" title="#1e1f28 elevated"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);" title="subtle border"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#5e6ad2;" title="#5e6ad2 Linear violet"></div>
+        <div style="width:14px;height:14px;border-radius:3px;background:#7c85d4;" title="#7c85d4 violet-hi"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px; text-align:center;">Click a panel to select it. Also — what did you mean by "b type"? A specific variant of Linear's style, or just Linear in general?</p>

@@ -1,0 +1,411 @@
+<h2>Full Linear Redesign — Design Approval</h2>
+<p class="subtitle">CSS variable token layer + icon system + consistent sizing. Review each section below.</p>
+
+<style>
+  .section-block { margin-bottom: 32px; }
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; margin-bottom: 12px; }
+
+  /* Token grid */
+  .token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .token { display: flex; align-items: center; gap: 8px; background: #13141a; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 8px 10px; }
+  .token-swatch { width: 24px; height: 24px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+  .token-name { font-size: 10px; font-weight: 600; color: #e8e8ec; font-family: monospace; }
+  .token-value { font-size: 9px; color: #52535e; font-family: monospace; }
+
+  /* Icon grid */
+  .icon-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .icon-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: #13141a; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px 12px; width: 64px; }
+  .icon-item svg { color: #8a8a9a; }
+  .icon-item span { font-size: 8px; color: #52535e; text-align: center; }
+
+  /* Editor mockup */
+  .editor-mock {
+    background: #08090d;
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .mock-topbar {
+    background: #0d0e12;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 42px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mock-title { font-size: 12px; color: #52535e; font-weight: 500; flex: 1; }
+  .mock-seg { background: #13141a; border-radius: 6px; padding: 3px; display: flex; }
+  .mock-seg-opt { border: none; background: transparent; cursor: default; border-radius: 4px; font-size: 11px; font-weight: 500; color: #52535e; padding: 4px 10px; display: flex; align-items: center; gap: 5px; }
+  .mock-seg-opt.on { background: #1e1f28; color: #e8e8ec; font-weight: 600; }
+  .mock-btn { display: flex; align-items: center; gap: 5px; border-radius: 5px; font-size: 11px; font-weight: 500; cursor: default; border: none; padding: 5px 12px; }
+  .mock-btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.1) !important; color: #8a8a9a; }
+  .mock-btn-primary { background: #5e6ad2; color: white; }
+
+  .mock-body { display: flex; background: #08090d; min-height: 220px; }
+  .mock-canvas {
+    flex: 1;
+    background: #08090d;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 16px 16px 16px 58px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mock-frame-panel {
+    position: absolute;
+    left: 10px; top: 10px;
+    background: rgba(8,9,13,0.96);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 6px;
+    width: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mock-panel-header { font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #3e3e4a; padding: 2px 2px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 2px; text-align: center; }
+  .mock-thumb { aspect-ratio: 16/9; background: #13141a; border-radius: 3px; border: 1px solid rgba(255,255,255,0.06); }
+  .mock-thumb.active { border-color: #5e6ad2; box-shadow: 0 0 0 2px rgba(94,106,210,0.2); }
+
+  .mock-frame-wrapper { position: relative; }
+  .mock-toolbar {
+    position: absolute; top: 8px; left: 8px;
+    display: flex; align-items: center; gap: 2px;
+    background: rgba(13,14,18,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 3px;
+  }
+  .mock-tb { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: #8a8a9a; }
+  .mock-tb:hover { background: rgba(255,255,255,0.06); }
+  .mock-tb-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+  .mock-frame {
+    background: linear-gradient(135deg,#0f1020,#0a0c1a);
+    border-radius: 8px;
+    border: 1.5px solid rgba(94,106,210,0.35);
+    padding: 32px 24px 20px;
+    min-height: 100px;
+  }
+  .mock-frame h4 { font-size: 20px; font-weight: 700; color: #f2f2f5; letter-spacing: -0.03em; margin: 0 0 6px; }
+  .mock-frame p { font-size: 11px; color: rgba(255,255,255,0.35); margin: 0; }
+
+  .mock-frame-2 {
+    background: #0d0e12;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    padding: 16px 24px;
+    min-height: 70px;
+    opacity: 0.6;
+  }
+  .mock-frame-2 h4 { font-size: 14px; font-weight: 600; color: #e8e8ec; margin: 0 0 4px; }
+  .mock-frame-2 p { font-size: 10px; color: rgba(255,255,255,0.25); margin: 0; }
+
+  .mock-between {
+    display: flex; align-items: center; gap: 8px;
+    opacity: 0.5; padding: 0 4px;
+  }
+  .mock-between-line { flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
+  .mock-between-btn {
+    background: #0d0e12; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 3px 10px; font-size: 9px; color: #52535e;
+  }
+
+  .mock-inspector {
+    width: 180px;
+    background: #0d0e12;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    padding: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    font-size: 11px;
+  }
+  .insp-section { margin-bottom: 14px; }
+  .insp-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #3e3e4a; margin-bottom: 8px; font-weight: 600; }
+  .insp-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .insp-key { font-size: 10px; color: #52535e; flex: 1; }
+  .insp-val { background: #13141a; border: 1px solid rgba(255,255,255,0.06); border-radius: 4px; padding: 3px 7px; font-size: 10px; color: #8a8a9a; font-family: monospace; }
+  .insp-sep { height: 1px; background: rgba(255,255,255,0.05); margin: 10px 0; }
+  .insp-title { font-size: 11px; font-weight: 600; color: #e8e8ec; margin-bottom: 10px; }
+  .anim-pill { display: inline-flex; align-items: center; gap: 4px; background: rgba(94,106,210,0.12); border: 1px solid rgba(94,106,210,0.25); border-radius: 4px; padding: 3px 7px; font-size: 9px; color: #8c94e0; }
+</style>
+
+<!-- 1. Token System -->
+<div class="section-block">
+  <div class="section-title">1 — CSS Token System (--var names)</div>
+  <div class="token-grid">
+    <div class="token">
+      <div class="token-swatch" style="background:#08090d;"></div>
+      <div><div class="token-name">--bg</div><div class="token-value">#08090d</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#0d0e12;"></div>
+      <div><div class="token-name">--surface-1</div><div class="token-value">#0d0e12 topbar/inspector</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#13141a;"></div>
+      <div><div class="token-name">--surface-2</div><div class="token-value">#13141a inputs/thumbs</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#1e1f28;"></div>
+      <div><div class="token-name">--surface-3</div><div class="token-value">#1e1f28 hover/active</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.2)!important;"></div>
+      <div><div class="token-name">--border</div><div class="token-value">rgba(255,255,255,0.06)</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2)!important;"></div>
+      <div><div class="token-name">--border-hi</div><div class="token-value">rgba(255,255,255,0.1)</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#f2f2f5;"></div>
+      <div><div class="token-name">--text-1</div><div class="token-value">#f2f2f5 primary</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#8a8a9a;"></div>
+      <div><div class="token-name">--text-2</div><div class="token-value">#8a8a9a secondary</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#52535e;"></div>
+      <div><div class="token-name">--text-3</div><div class="token-value">#52535e muted</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#3e3e4a;"></div>
+      <div><div class="token-name">--text-4</div><div class="token-value">#3e3e4a labels</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#5e6ad2;"></div>
+      <div><div class="token-name">--accent</div><div class="token-value">#5e6ad2 Linear violet</div></div>
+    </div>
+    <div class="token">
+      <div class="token-swatch" style="background:#7c85d4;"></div>
+      <div><div class="token-name">--accent-hi</div><div class="token-value">#7c85d4 hover/focus</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Icon Set -->
+<div class="section-block">
+  <div class="section-title">2 — SVG Icon Set (16px stroke, inline)</div>
+  <div class="icon-grid">
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="5,3 14,8 5,13"/></svg>
+      <span>Preview</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l4 4 6-6"/></svg>
+      <span>Export</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg>
+      <span>Scroll</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+      <span>Frame</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13.5 2.5a6 6 0 0 1 0 11M2.5 2.5a6 6 0 0 0 0 11"/><polyline points="10,1 13.5,2.5 12,6"/></svg>
+      <span>Regen</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+      <span>Layout</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+      <span>Hide</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></svg>
+      <span>Duplicate</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="3,4 13,4"/><path d="M5 4V2h6v2"/><path d="M5 7v5m3-5v5m3-5v5"/><rect x="3" y="4" width="10" height="10" rx="1"/></svg>
+      <span>Delete</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 14A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="11" x2="8.01" y2="11"/></svg>
+      <span>Info</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="8" y1="1" x2="8" y2="15"/><line x1="1" y1="8" x2="15" y2="8"/></svg>
+      <span>Add</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M11 2H5L2 8l3 6h6l3-6-3-6z"/></svg>
+      <span>Thumb</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+      <span>List</span>
+    </div>
+    <div class="icon-item">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 4l-4 4 4 4M9 4l4 4-4 4"/></svg>
+      <span>Back</span>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Sizing System -->
+<div class="section-block">
+  <div class="section-title">3 — Sizing System</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+    <div style="background:#13141a; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:14px;">
+      <div style="font-size:10px; color:#5e6ad2; font-weight:600; margin-bottom:10px;">Heights (consistent)</div>
+      <div style="font-size:10px; color:#52535e; line-height:2;">
+        Topbar: <span style="color:#8a8a9a;">42px</span><br>
+        Topbar buttons: <span style="color:#8a8a9a;">28px tall</span><br>
+        Toolbar icon buttons: <span style="color:#8a8a9a;">26×26px</span><br>
+        Inspector inputs: <span style="color:#8a8a9a;">26px tall</span><br>
+        Between-frame bar: <span style="color:#8a8a9a;">28px</span>
+      </div>
+    </div>
+    <div style="background:#13141a; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:14px;">
+      <div style="font-size:10px; color:#5e6ad2; font-weight:600; margin-bottom:10px;">Typography</div>
+      <div style="font-size:10px; color:#52535e; line-height:2;">
+        UI labels: <span style="color:#8a8a9a;">10px / #3e3e4a</span><br>
+        Body/inputs: <span style="color:#8a8a9a;">11px / #8a8a9a</span><br>
+        Buttons: <span style="color:#8a8a9a;">11px / 500 weight</span><br>
+        Title: <span style="color:#8a8a9a;">12px / 500 / #52535e</span><br>
+        Icons: <span style="color:#8a8a9a;">16px, stroke 1.7</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Full Editor Mockup -->
+<div class="section-block">
+  <div class="section-title">4 — Full Editor Preview</div>
+  <div class="editor-mock">
+    <!-- Topbar -->
+    <div class="mock-topbar">
+      <span class="mock-title">from-hierarchy-to-intelligence</span>
+      <div class="mock-seg">
+        <button class="mock-seg-opt on">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg>
+          Scroll
+        </button>
+        <button class="mock-seg-opt">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+          Frame
+        </button>
+      </div>
+      <button class="mock-btn mock-btn-secondary">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+        Export
+      </button>
+      <button class="mock-btn mock-btn-primary">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,3 14,8 5,13"/></svg>
+        Preview
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="mock-body">
+      <div class="mock-canvas">
+        <!-- Frame panel -->
+        <div class="mock-frame-panel">
+          <div class="mock-panel-header">Frames</div>
+          <div class="mock-thumb active"></div>
+          <div class="mock-thumb"></div>
+          <div class="mock-thumb"></div>
+          <div class="mock-thumb"></div>
+        </div>
+
+        <!-- Frame 1 (active, toolbar visible) -->
+        <div class="mock-frame-wrapper">
+          <div class="mock-toolbar">
+            <div class="mock-tb" title="Regenerate"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 2.5a6 6 0 0 1 0 11M2.5 2.5a6 6 0 0 0 0 11"/><polyline points="10,1 13.5,2.5 12,6"/></svg></div>
+            <div class="mock-tb" title="Layout"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg></div>
+            <div class="mock-tb" title="Hide"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></div>
+            <div class="mock-tb" title="Duplicate"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></svg></div>
+            <div class="mock-tb-sep"></div>
+            <div class="mock-tb" title="Delete" style="color:rgba(239,68,68,0.6);"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V2h6v2"/><path d="M5 7v5m3-5v5m3-5v5"/><rect x="3" y="4" width="10" height="10" rx="1"/></svg></div>
+          </div>
+          <div class="mock-frame">
+            <h4>From Hierarchy to Intelligence</h4>
+            <p>How AI is reshaping the org chart</p>
+          </div>
+        </div>
+
+        <!-- Between frames -->
+        <div class="mock-between">
+          <div class="mock-between-line"></div>
+          <div class="mock-between-btn">+ Add frame</div>
+          <div class="mock-between-line"></div>
+        </div>
+
+        <!-- Frame 2 -->
+        <div class="mock-frame-2">
+          <h4>The Old Playbook</h4>
+          <p>Command, control, hierarchy</p>
+        </div>
+      </div>
+
+      <!-- Inspector -->
+      <div class="mock-inspector">
+        <div class="insp-title">el-1 · heading</div>
+        <div class="insp-sep"></div>
+        <div class="insp-section">
+          <div class="insp-label">Typography</div>
+          <div class="insp-row">
+            <span class="insp-key">Size</span>
+            <span class="insp-val">72px</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-key">Weight</span>
+            <span class="insp-val">700</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-key">Color</span>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:14px;height:14px;background:#f2f2f5;border-radius:3px;border:1px solid rgba(255,255,255,0.1);"></div>
+              <span class="insp-val">#f2f2f5</span>
+            </div>
+          </div>
+        </div>
+        <div class="insp-sep"></div>
+        <div class="insp-section">
+          <div class="insp-label">Animation In</div>
+          <div class="insp-row">
+            <span class="anim-pill">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="8" y1="14" x2="8" y2="4"/><polyline points="4,8 8,4 12,8"/></svg>
+              fly-up
+            </span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-key">Duration</span>
+            <span class="insp-val">0.6s</span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-key">Delay</span>
+            <span class="insp-val">0.1s</span>
+          </div>
+        </div>
+        <div class="insp-sep"></div>
+        <div class="insp-section">
+          <div class="insp-label">Animation Out</div>
+          <div class="insp-row">
+            <span class="anim-pill">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6"/></svg>
+              fade
+            </span>
+          </div>
+          <div class="insp-row">
+            <span class="insp-key">Duration</span>
+            <span class="insp-val">0.3s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center; margin-top:16px;">Does this look right? Any section you want to adjust before I write the spec?</p>

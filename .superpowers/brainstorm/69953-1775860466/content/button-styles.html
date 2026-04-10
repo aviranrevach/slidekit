@@ -1,0 +1,282 @@
+<h2>Button & Icon Style Options</h2>
+<p class="subtitle">All on the Linear near-black palette. Click your preferred style.</p>
+
+<style>
+  .demo-shell {
+    background: #08090d;
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .demo-topbar {
+    background: #0d0e12;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 14px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .demo-title {
+    font-size: 12px;
+    color: #52535e;
+    flex: 1;
+    font-weight: 500;
+  }
+  .demo-canvas {
+    background: #08090d;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 14px 14px 14px 56px;
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .demo-frame-panel {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: rgba(8,9,13,0.95);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 7px;
+    padding: 5px;
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .demo-thumb {
+    aspect-ratio: 16/9;
+    background: #13141a;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .demo-thumb.active {
+    border-color: #5e6ad2;
+  }
+  .demo-frame-body {
+    background: linear-gradient(135deg,#0f1020,#0a0c1a);
+    border-radius: 7px;
+    border: 1.5px solid rgba(94,106,210,0.35);
+    padding: 12px 14px;
+    flex: 1;
+  }
+  .demo-frame-body h4 { font-size:13px; font-weight:700; color:#f2f2f5; letter-spacing:-0.03em; margin:0 0 3px; }
+  .demo-frame-body p  { font-size:9px; color:rgba(255,255,255,0.3); margin:0; }
+
+  /* toolbar */
+  .demo-toolbar {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 4px;
+    background: rgba(13,14,18,0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 3px;
+    width: fit-content;
+  }
+  .tb { display:flex; align-items:center; justify-content:center; border:none; background:transparent; cursor:pointer; border-radius:4px; color:#8a8a9a; }
+  .tb:hover { background:rgba(255,255,255,0.06); color:#e8e8ec; }
+  .tb.danger:hover { background:rgba(239,68,68,0.1); color:#ef4444; }
+  .tb svg { display:block; }
+
+  /* segmented */
+  .seg { background:#13141a; border-radius:6px; padding:2px; display:flex; }
+  .seg-opt { border:none; background:transparent; cursor:pointer; border-radius:4px; color:#52535e; font-size:10px; font-weight:500; }
+  .seg-opt.on { background:#1e1f28; color:#e8e8ec; font-weight:600; }
+
+  /* primary btn */
+  .btn-primary { background:#5e6ad2; color:white; border:none; border-radius:5px; font-size:11px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:5px; }
+  .btn-secondary { background:transparent; border:1px solid rgba(255,255,255,0.1); color:#8a8a9a; border-radius:5px; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:5px; }
+
+  .opt-label { font-size:10px; font-weight:600; color:#5e6ad2; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.08em; }
+</style>
+
+<div class="cards" style="grid-template-columns:1fr 1fr 1fr; gap:16px;">
+
+  <!-- OPTION A: Icon + Label everywhere -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:transparent;">
+      <div class="demo-shell">
+        <div class="demo-topbar">
+          <span class="demo-title">my-deck</span>
+          <div class="seg">
+            <button class="seg-opt on" style="padding:4px 9px; display:flex; align-items:center; gap:4px;">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg>
+              Scroll
+            </button>
+            <button class="seg-opt" style="padding:4px 9px; display:flex; align-items:center; gap:4px;">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+              Frame
+            </button>
+          </div>
+          <button class="btn-secondary" style="padding:5px 10px;">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+            Export
+          </button>
+          <button class="btn-primary" style="padding:5px 11px;">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,3 14,8 5,13"/></svg>
+            Preview
+          </button>
+        </div>
+        <div class="demo-canvas">
+          <div class="demo-frame-panel">
+            <div class="demo-thumb active"></div>
+            <div class="demo-thumb"></div>
+            <div class="demo-thumb"></div>
+          </div>
+          <div style="flex:1;">
+            <div class="demo-toolbar">
+              <button class="tb" style="padding:4px 7px; gap:4px; font-size:10px; color:#8a8a9a;">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 2.5a6 6 0 0 1 0 11M2.5 2.5a6 6 0 0 0 0 11"/><polyline points="10,1 13.5,2.5 12,6"/></svg>
+                Regen
+              </button>
+              <button class="tb" style="padding:4px 7px; gap:4px; font-size:10px; color:#8a8a9a;">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                Layout
+              </button>
+              <button class="tb" style="padding:4px 7px; gap:4px; font-size:10px; color:#8a8a9a;">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 0 1 6 0v1"/></svg>
+                Hide
+              </button>
+              <button class="tb danger" style="padding:4px 7px; gap:4px; font-size:10px;">
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V2h6v2"/><path d="M5 7v5m3-5v5m3-5v5"/><rect x="3" y="4" width="10" height="10" rx="1"/></svg>
+                Delete
+              </button>
+            </div>
+            <div class="demo-frame-body"><h4>The Big Idea</h4><p>Subtitle goes here</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Icon + Label</h3>
+      <p>Every button shows icon and text. Most readable. More width used.</p>
+    </div>
+  </div>
+
+  <!-- OPTION B: Icon+label topbar, icon-only toolbar -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:transparent;">
+      <div class="demo-shell">
+        <div class="demo-topbar">
+          <span class="demo-title">my-deck</span>
+          <div class="seg">
+            <button class="seg-opt on" style="padding:4px 9px; display:flex; align-items:center; gap:4px;">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg>
+              Scroll
+            </button>
+            <button class="seg-opt" style="padding:4px 9px; display:flex; align-items:center; gap:4px;">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+              Frame
+            </button>
+          </div>
+          <button class="btn-secondary" style="padding:5px 10px;">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+            Export
+          </button>
+          <button class="btn-primary" style="padding:5px 11px;">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,3 14,8 5,13"/></svg>
+            Preview
+          </button>
+        </div>
+        <div class="demo-canvas">
+          <div class="demo-frame-panel">
+            <div class="demo-thumb active"></div>
+            <div class="demo-thumb"></div>
+            <div class="demo-thumb"></div>
+          </div>
+          <div style="flex:1;">
+            <div class="demo-toolbar">
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Regenerate">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 2.5a6 6 0 0 1 0 11M2.5 2.5a6 6 0 0 0 0 11"/><polyline points="10,1 13.5,2.5 12,6"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Change Layout">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Hide">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Duplicate">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></svg>
+              </button>
+              <div style="width:1px; height:14px; background:rgba(255,255,255,0.08); margin:0 2px;"></div>
+              <button class="tb danger" style="padding:5px; width:26px; height:26px;" title="Delete">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V2h6v2"/><path d="M5 7v5m3-5v5m3-5v5"/><rect x="3" y="4" width="10" height="10" rx="1"/></svg>
+              </button>
+            </div>
+            <div class="demo-frame-body"><h4>The Big Idea</h4><p>Subtitle goes here</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mixed <span style="color:#5e6ad2;">★ Recommended</span></h3>
+      <p>Icon+label in topbar, icon-only in toolbar (with tooltips). Compact toolbar, clear primary actions.</p>
+    </div>
+  </div>
+
+  <!-- OPTION C: All icon-only -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0; background:transparent;">
+      <div class="demo-shell">
+        <div class="demo-topbar">
+          <span class="demo-title">my-deck</span>
+          <div class="seg">
+            <button class="seg-opt on" style="padding:5px 8px;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="1" y1="10" x2="15" y2="10"/></svg>
+            </button>
+            <button class="seg-opt" style="padding:5px 8px;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+            </button>
+          </div>
+          <button class="btn-secondary" style="padding:6px 8px;" title="Export">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 6-6"/></svg>
+          </button>
+          <button class="btn-primary" style="padding:6px 8px;" title="Preview">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,3 14,8 5,13"/></svg>
+          </button>
+        </div>
+        <div class="demo-canvas">
+          <div class="demo-frame-panel">
+            <div class="demo-thumb active"></div>
+            <div class="demo-thumb"></div>
+            <div class="demo-thumb"></div>
+          </div>
+          <div style="flex:1;">
+            <div class="demo-toolbar">
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Regenerate">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 2.5a6 6 0 0 1 0 11M2.5 2.5a6 6 0 0 0 0 11"/><polyline points="10,1 13.5,2.5 12,6"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Change Layout">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Hide">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+              </button>
+              <button class="tb" style="padding:5px; width:26px; height:26px;" title="Duplicate">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/></svg>
+              </button>
+              <div style="width:1px; height:14px; background:rgba(255,255,255,0.08); margin:0 2px;"></div>
+              <button class="tb danger" style="padding:5px; width:26px; height:26px;" title="Delete">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3,4 13,4"/><path d="M5 4V2h6v2"/><path d="M5 7v5m3-5v5m3-5v5"/><rect x="3" y="4" width="10" height="10" rx="1"/></svg>
+              </button>
+            </div>
+            <div class="demo-frame-body"><h4>The Big Idea</h4><p>Subtitle goes here</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Icon-Only</h3>
+      <p>Everything icon-only with tooltips. Most compact. Requires learning icons.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="text-align:center; margin-top:16px;">Click a card to select. Hover the toolbar buttons to see tooltips on option B & C.</p>
