@@ -117,7 +117,9 @@ const sharedJS  = extractSharedJS(html);
 const { strategy, sections } = sliceSections(html);
 
 fs.mkdirSync(projectDir, { recursive: true });
-if (sharedCSS) fs.writeFileSync(path.join(projectDir, 'shared.css'), sharedCSS, 'utf8');
+// Scope :root variables to .frame-body-wrap to prevent leaking into editor CSS
+const scopedCSS = sharedCSS ? sharedCSS.replace(/:root\s*\{/, '.frame-body-wrap {') : '';
+if (scopedCSS) fs.writeFileSync(path.join(projectDir, 'shared.css'), scopedCSS, 'utf8');
 if (sharedJS)  fs.writeFileSync(path.join(projectDir, 'shared.js'),  sharedJS,  'utf8');
 
 const result = {
