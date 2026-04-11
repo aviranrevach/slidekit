@@ -272,7 +272,7 @@ Follow the [Superpowers installation guide](https://github.com/superpowers-sh/su
 ### Install SlideKit
 
 ```bash
-git clone https://github.com/aviranrevach/slidekit ~/.claude/skills/present
+git clone https://github.com/aviranrevach/slidekit ~/.claude/skills/slidekit
 ```
 
 That's it. The `/present` skill is now available in every Claude Code session.
