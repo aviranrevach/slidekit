@@ -1373,6 +1373,20 @@ function renderEditor(json) {
   // Init animations (scroll mode by default in editor)
   PresentRenderer.initAnimations(root, 'scroll');
 
+  // Trigger entrance animations for migrated HTML frames (JS-driven .visible pattern)
+  // Scripts in innerHTML don't execute, so we trigger them here after DOM is live
+  const STAGGER_SELECTORS = [
+    ['.t-item', 100],
+    ['.block-card', 80],
+    ['.role-card', 100],
+    ['.mapping-row', 80],
+  ];
+  STAGGER_SELECTORS.forEach(([sel, gap]) => {
+    root.querySelectorAll(sel).forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * gap + 200);
+    });
+  });
+
   // Frame strip
   renderFrameStrip(frames);
 
