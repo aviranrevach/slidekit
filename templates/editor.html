@@ -177,6 +177,14 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
 }
 .explore-variant-item { position: relative; margin-bottom: 10px; }
+.explore-variant-item .present-frame,
+.explore-variant-item .present-frame * { pointer-events: none !important; }
+.explore-variant-frame-wrap {
+  max-height: 320px; overflow: hidden; border-radius: 8px;
+  border: 1px solid rgba(94,106,210,0.2);
+  transform-origin: top left;
+  position: relative;
+}
 .explore-variant-badge {
   position: absolute; top: 8px; right: 8px; z-index: 10;
   background: rgba(94,106,210,0.15); border: 1px solid rgba(94,106,210,0.3);
@@ -767,11 +775,14 @@ function buildExploreGroup(sourceFrameId, variants, json) {
     const variantRoot = PresentRenderer.renderPresentation({ ...json, frames: [variant] });
     const variantFrameEl = variantRoot.querySelector('.present-frame');
     if (variantFrameEl) {
+      const wrap = document.createElement('div');
+      wrap.className = 'explore-variant-frame-wrap';
+      wrap.appendChild(variantFrameEl);
       const badge = document.createElement('div');
       badge.className = 'explore-variant-badge';
       badge.textContent = `Option ${i + 1}`;
       item.appendChild(badge);
-      item.appendChild(variantFrameEl);
+      item.appendChild(wrap);
     }
     const actions = document.createElement('div');
     actions.className = 'explore-variant-actions';
@@ -817,7 +828,7 @@ function triggerExplore(frameId, context) {
   if (existing?.classList.contains('explore-group')) existing.remove();
   const waiting = document.createElement('div');
   waiting.className = 'explore-group';
-  waiting.innerHTML = `<div class="explore-group-header"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg> Explore variants</div><div class="explore-waiting"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Waiting for Claude to generate options…</div>`;
+  waiting.innerHTML = `<div class="explore-group-header"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg> Explore variants</div><div class="explore-waiting" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;align-items:center;gap:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Ready to generate</span></div><div style="font-size:10px;color:var(--text-4);line-height:1.6;"><strong style="color:var(--text-3);">→ Go to your Claude chat</strong> and type <strong style="color:var(--accent);">"explore"</strong> or <strong style="color:var(--accent);">"explore frame [N]"</strong>. Claude will generate 3–5 layout variants and they'll appear here automatically.</div></div>`;
   wrapper.insertAdjacentElement('afterend', waiting);
 }
 

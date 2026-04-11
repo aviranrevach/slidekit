@@ -1,0 +1,260 @@
+<h2>Queue Panel — Refined Design</h2>
+<p class="subtitle">No button. Type-to-execute as primary action. AI items show rich data indicator. Click an item to expand it.</p>
+
+<style>
+  .mock-shell {
+    background: #08090d; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.07); font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    position: relative;
+  }
+  .mock-topbar {
+    background: #0d0e12; border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 38px; padding: 0 14px; display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: #52535e;
+  }
+  .mock-canvas {
+    background: #08090d;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 14px 270px 14px 52px; min-height: 380px; position: relative;
+  }
+  .mock-frame {
+    background: linear-gradient(135deg,#0f1020,#0a0c1a);
+    border-radius: 7px; border: 1px solid rgba(94,106,210,0.3);
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .mock-frame h4 { font-size: 11px; font-weight: 700; color: #f2f2f5; margin: 0 0 3px; letter-spacing: -0.02em; }
+  .mock-frame p { font-size: 8px; color: rgba(255,255,255,0.25); margin: 0; }
+
+  /* Queue panel */
+  .queue-panel {
+    position: absolute; top: 12px; right: 12px; bottom: 12px; width: 242px;
+    background: #0d0e12; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; display: flex; flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .qp-header {
+    padding: 10px 12px 9px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .qp-title { font-size: 11px; font-weight: 600; color: #e8e8ec; flex: 1; }
+  .qp-count {
+    background: #5e6ad2; color: white; border-radius: 8px;
+    font-size: 9px; font-weight: 700; padding: 1px 7px;
+  }
+  .qp-collapse { color: #3e3e4a; font-size: 12px; cursor: pointer; }
+
+  .qp-items { flex: 1; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+
+  /* Note item */
+  .qi {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 7px; padding: 7px 9px; cursor: default;
+  }
+  .qi.note { border-left: 2px solid rgba(251,191,36,0.5); }
+  .qi.ai   { border-left: 2px solid rgba(94,106,210,0.6); }
+
+  .qi-top { display: flex; align-items: flex-start; gap: 6px; }
+  .qi-icon { font-size: 10px; flex-shrink: 0; margin-top: 1px; line-height: 1; }
+  .qi-body { flex: 1; min-width: 0; }
+  .qi-meta { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+  .qi-frame-tag {
+    font-size: 8px; color: #3e3e4a; text-transform: uppercase;
+    letter-spacing: 0.08em; background: rgba(255,255,255,0.04);
+    border-radius: 3px; padding: 1px 5px;
+  }
+  .qi-type-tag {
+    font-size: 8px; color: #5e6ad2; text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .qi-text { font-size: 10px; color: #8a8a9a; line-height: 1.45; }
+  .qi-del { color: #2e2e3a; font-size: 13px; cursor: pointer; flex-shrink: 0; line-height: 1; padding: 0 1px; }
+  .qi-del:hover { color: #ef4444; }
+
+  /* Rich data indicator */
+  .qi-rich {
+    display: flex; align-items: center; gap: 4px; margin-top: 5px;
+    padding: 3px 6px; background: rgba(94,106,210,0.07);
+    border: 1px solid rgba(94,106,210,0.12); border-radius: 4px;
+    width: fit-content;
+  }
+  .qi-rich-dot { width: 4px; height: 4px; border-radius: 50%; background: #5e6ad2; flex-shrink: 0; }
+  .qi-rich-dots { display: flex; gap: 2px; }
+  .qi-rich-label { font-size: 8px; color: #52535e; letter-spacing: 0.04em; }
+
+  /* Execute zone */
+  .qp-execute {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 10px 12px 11px;
+  }
+  .qp-execute-label {
+    font-size: 9px; color: #3e3e4a; margin-bottom: 6px; letter-spacing: 0.02em;
+  }
+  .qp-execute-phrase {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 6px; padding: 7px 10px; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .qp-execute-phrase:hover { background: rgba(94,106,210,0.17); }
+  .qp-phrase-text {
+    font-family: monospace; font-size: 11px; color: #8c94e0; font-weight: 600; flex: 1;
+  }
+  .qp-copy-hint { font-size: 8px; color: #3e3e4a; }
+
+  /* Collapsed pill */
+  .queue-pill {
+    position: absolute; bottom: 16px; right: 16px;
+    background: #1e1f28; border: 1px solid rgba(94,106,210,0.4);
+    border-radius: 20px; padding: 5px 12px 5px 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5); cursor: pointer;
+  }
+  .pill-badge { background: #5e6ad2; color: white; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 7px; }
+  .pill-label { font-size: 11px; color: #8a8a9a; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .label { font-size: 10px; color: #5e6ad2; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+</style>
+
+<!-- Expanded panel -->
+<div class="label">Expanded panel</div>
+<div class="mock-shell" style="margin-bottom:20px;">
+  <div class="mock-topbar">
+    <span style="flex:1;">from-hierarchy-to-intelligence</span>
+    <div style="background:#13141a;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:3px 10px;font-size:10px;">▶ Preview</div>
+  </div>
+  <div class="mock-canvas">
+    <div class="mock-frame"><h4>Hierarchy was always a hack</h4><p>information routing · Part 1</p></div>
+    <div class="mock-frame"><h4>The 2,000-Year Problem</h4><p>Roman Army → Prussia → AI</p></div>
+    <div class="mock-frame"><h4>What Changes Now</h4><p>Block's new org structure</p></div>
+
+    <!-- Queue panel -->
+    <div class="queue-panel">
+      <div class="qp-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#5e6ad2" stroke-width="1.7" stroke-linecap="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg>
+        <span class="qp-title">Queue</span>
+        <span class="qp-count">5</span>
+        <span class="qp-collapse">−</span>
+      </div>
+
+      <div class="qp-items">
+
+        <!-- Note item — simple -->
+        <div class="qi note">
+          <div class="qi-top">
+            <span class="qi-icon">✏</span>
+            <div class="qi-body">
+              <div class="qi-meta">
+                <span class="qi-frame-tag">Frame 1</span>
+              </div>
+              <div class="qi-text">make the heading more punchy and direct</div>
+            </div>
+            <span class="qi-del">×</span>
+          </div>
+        </div>
+
+        <!-- AI item — rich data -->
+        <div class="qi ai">
+          <div class="qi-top">
+            <span class="qi-icon" style="color:#8c94e0;">✦</span>
+            <div class="qi-body">
+              <div class="qi-meta">
+                <span class="qi-frame-tag">Frame 1</span>
+                <span class="qi-type-tag">Explore</span>
+              </div>
+              <div class="qi-text">darker, more editorial style</div>
+              <div class="qi-rich">
+                <div class="qi-rich-dots">
+                  <div class="qi-rich-dot"></div>
+                  <div class="qi-rich-dot" style="opacity:0.6;"></div>
+                  <div class="qi-rich-dot" style="opacity:0.35;"></div>
+                </div>
+                <span class="qi-rich-label">includes layout context, neighbors, theme</span>
+              </div>
+            </div>
+            <span class="qi-del">×</span>
+          </div>
+        </div>
+
+        <!-- Note item -->
+        <div class="qi note">
+          <div class="qi-top">
+            <span class="qi-icon">✏</span>
+            <div class="qi-body">
+              <div class="qi-meta">
+                <span class="qi-frame-tag">Frame 3</span>
+              </div>
+              <div class="qi-text">add a timeline visual — Roman Army to today</div>
+            </div>
+            <span class="qi-del">×</span>
+          </div>
+        </div>
+
+        <!-- AI item — rich data -->
+        <div class="qi ai">
+          <div class="qi-top">
+            <span class="qi-icon" style="color:#8c94e0;">✦</span>
+            <div class="qi-body">
+              <div class="qi-meta">
+                <span class="qi-frame-tag">Frame 5</span>
+                <span class="qi-type-tag">Explore</span>
+              </div>
+              <div class="qi-text">more visual, less text-heavy</div>
+              <div class="qi-rich">
+                <div class="qi-rich-dots">
+                  <div class="qi-rich-dot"></div>
+                  <div class="qi-rich-dot" style="opacity:0.6;"></div>
+                  <div class="qi-rich-dot" style="opacity:0.35;"></div>
+                </div>
+                <span class="qi-rich-label">includes layout context, neighbors, theme</span>
+              </div>
+            </div>
+            <span class="qi-del">×</span>
+          </div>
+        </div>
+
+        <!-- Note item -->
+        <div class="qi note">
+          <div class="qi-top">
+            <span class="qi-icon">✏</span>
+            <div class="qi-body">
+              <div class="qi-meta">
+                <span class="qi-frame-tag">Frame 7</span>
+              </div>
+              <div class="qi-text">the CTA needs to feel more urgent</div>
+            </div>
+            <span class="qi-del">×</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Execute zone — no button, just the phrase -->
+      <div class="qp-execute">
+        <div class="qp-execute-label">To apply all — type this in Claude chat:</div>
+        <div class="qp-execute-phrase">
+          <span class="qp-phrase-text">"execute queue"</span>
+          <span class="qp-copy-hint">click to copy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Collapsed pill -->
+<div class="label">Collapsed — floating pill</div>
+<div class="mock-shell">
+  <div class="mock-topbar">
+    <span style="flex:1;">from-hierarchy-to-intelligence</span>
+  </div>
+  <div class="mock-canvas" style="padding-right:14px;min-height:100px;">
+    <div class="mock-frame"><h4>Hierarchy was always a hack</h4><p>information routing</p></div>
+    <div class="queue-pill">
+      <span class="pill-badge">5</span>
+      <span class="pill-label">in queue</span>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Does this direction feel right? Any part to adjust before I write the spec?</p>
