@@ -1,0 +1,212 @@
+<h2>SlideKit — Topbar Redesign</h2>
+<p class="subtitle">Figma reference vs. proposed design. The view toggle (Slide/Strip/Grid) only changes how you see frames in the editor — doesn't touch the file. Everything else moves to Settings.</p>
+
+<style>
+  .tb-shell {
+    background: #08090d;
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .tb {
+    background: #0d0e12;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 42px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+  .tb-title { font-size: 12px; color: #52535e; font-weight: 500; flex: 1; }
+  .tb-center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; }
+
+  /* Segmented control */
+  .seg { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 2px; display: flex; }
+  .seg-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: transparent; border: none; color: #52535e;
+    border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 500; cursor: pointer;
+    font-family: inherit; height: 24px;
+  }
+  .seg-btn.on { background: #1e1f28; color: #f2f2f5; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+  .seg-btn:hover:not(.on) { color: #8a8a9a; }
+
+  /* Right buttons */
+  .tb-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .btn {
+    display: flex; align-items: center; gap: 5px;
+    border-radius: 5px; font-size: 11px; font-weight: 500; cursor: pointer;
+    font-family: inherit; padding: 5px 11px; height: 28px;
+  }
+  .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #8a8a9a; }
+  .btn-ghost:hover { color: #f2f2f5; background: rgba(255,255,255,0.05); }
+  .btn-primary { background: #5e6ad2; border: 1px solid #5e6ad2; color: white; }
+  .btn-primary:hover { background: #7c85d4; }
+  .btn-icon { background: transparent; border: none; color: #52535e; padding: 5px 6px; border-radius: 5px; cursor: pointer; height: 28px; display: flex; align-items: center; }
+  .btn-icon:hover { background: rgba(255,255,255,0.05); color: #8a8a9a; }
+
+  /* Settings panel */
+  .settings-panel {
+    background: #0d0e12; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 12px 14px; width: 200px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column; gap: 10px;
+    font-family: -apple-system, sans-serif;
+  }
+  .sp-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #3e3e4a; font-weight: 600; }
+  .sp-row { display: flex; align-items: center; justify-content: space-between; }
+  .sp-label { font-size: 11px; color: #8a8a9a; }
+  .sp-seg { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; padding: 2px; display: flex; gap: 0; }
+  .sp-opt { font-size: 10px; color: #52535e; border: none; background: transparent; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-family: inherit; }
+  .sp-opt.on { background: #1e1f28; color: #e8e8ec; }
+  .sp-sep { height: 1px; background: rgba(255,255,255,0.05); }
+
+  .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; font-weight: 600; margin-bottom: 8px; }
+  .canvas-preview {
+    background: #08090d;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 80px;
+  }
+  .frame-strip { background: linear-gradient(135deg,#0f1020,#0a0c1a); border-radius: 5px; border: 1px solid rgba(94,106,210,0.25); height: 28px; padding: 8px 12px; display: flex; align-items: center; }
+  .frame-strip h4 { font-size: 10px; font-weight: 600; color: #f2f2f5; margin: 0; letter-spacing: -0.02em; }
+
+  /* Grid view */
+  .grid-preview { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 12px; background: #08090d; background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 20px 20px; }
+  .grid-thumb { aspect-ratio: 16/9; background: linear-gradient(135deg,#0f1020,#0a0c1a); border-radius: 4px; border: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 8px; color: #3e3e4a; }
+  .grid-thumb.active { border-color: #5e6ad2; }
+</style>
+
+<!-- Current topbar -->
+<div class="label">Current topbar (what we're replacing)</div>
+<div class="tb-shell" style="margin-bottom:20px;">
+  <div class="tb">
+    <span class="tb-title">From Hierarchy to Intelligence</span>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <select style="background:#13141a;border:1px solid rgba(255,255,255,0.06);color:#8a8a9a;border-radius:5px;padding:4px 8px;font-size:11px;height:28px;">
+        <option>Dark</option><option>Light</option>
+      </select>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:7px;padding:2px;display:flex;">
+        <button style="background:transparent;border:none;color:#8a8a9a;font-size:10px;padding:4px 10px;border-radius:5px;cursor:default;">Scroll</button>
+        <button style="background:#1e1f28;border:none;color:#f2f2f5;font-size:10px;padding:4px 10px;border-radius:5px;cursor:default;font-weight:600;">Frame</button>
+      </div>
+      <button class="btn btn-ghost">↓ Export</button>
+      <button class="btn btn-primary">▶ Preview</button>
+    </div>
+  </div>
+</div>
+
+<!-- New topbar -->
+<div class="label">New topbar — matches Figma reference</div>
+<div class="tb-shell" style="margin-bottom:20px;">
+  <div class="tb">
+    <!-- Left: title -->
+    <span class="tb-title">From Hierarchy to Intelligence</span>
+
+    <!-- Center: view toggle -->
+    <div class="tb-center">
+      <div class="seg">
+        <button class="seg-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Slide
+        </button>
+        <button class="seg-btn on">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+          Strip
+        </button>
+        <button class="seg-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Grid
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Settings + Preview + Export -->
+    <div class="tb-right">
+      <button class="btn btn-ghost">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Settings
+      </button>
+      <button class="btn btn-primary">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+        Preview
+      </button>
+      <button class="btn-icon" title="Export">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- What each view mode does -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+  <div>
+    <div class="label">Slide view</div>
+    <div class="tb-shell">
+      <div class="canvas-preview" style="padding:20px;display:flex;align-items:center;justify-content:center;">
+        <div class="frame-strip" style="width:200px;height:100px;display:flex;align-items:center;padding:20px;">
+          <h4>Frame fills canvas</h4>
+        </div>
+      </div>
+    </div>
+    <p class="subtitle" style="font-size:10px;margin-top:6px;">One frame at a time, full canvas. Same as current Frame mode.</p>
+  </div>
+  <div>
+    <div class="label">Strip view ★ default</div>
+    <div class="tb-shell">
+      <div class="canvas-preview">
+        <div class="frame-strip"><h4>Part 1 — Timeline</h4></div>
+        <div class="frame-strip"><h4>Part 2 — Core Argument</h4></div>
+        <div class="frame-strip"><h4>Part 3 — New Architecture</h4></div>
+      </div>
+    </div>
+    <p class="subtitle" style="font-size:10px;margin-top:6px;">All frames stacked vertically. Same as current Scroll mode.</p>
+  </div>
+  <div>
+    <div class="label">Grid view</div>
+    <div class="tb-shell">
+      <div class="grid-preview">
+        <div class="grid-thumb active">1</div>
+        <div class="grid-thumb">2</div>
+        <div class="grid-thumb">3</div>
+        <div class="grid-thumb">4</div>
+        <div class="grid-thumb">5</div>
+        <div class="grid-thumb">6</div>
+      </div>
+    </div>
+    <p class="subtitle" style="font-size:10px;margin-top:6px;">All frames as thumbnails. Click to focus. Good for deck overview.</p>
+  </div>
+</div>
+
+<!-- Settings panel -->
+<div class="label">Settings panel (what moves out of topbar)</div>
+<div class="settings-panel">
+  <div class="sp-title">Presentation settings</div>
+  <div class="sp-row">
+    <span class="sp-label">Theme</span>
+    <div class="sp-seg">
+      <button class="sp-opt on">Dark</button>
+      <button class="sp-opt">Light</button>
+    </div>
+  </div>
+  <div class="sp-sep"></div>
+  <div class="sp-row">
+    <span class="sp-label">Navigation</span>
+    <div class="sp-seg">
+      <button class="sp-opt on">Scroll</button>
+      <button class="sp-opt">Slides</button>
+    </div>
+  </div>
+  <div class="sp-sep"></div>
+  <div class="sp-row">
+    <span class="sp-label">Aspect ratio</span>
+    <div class="sp-seg">
+      <button class="sp-opt on">16:9</button>
+      <button class="sp-opt">Free</button>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Does this direction look right? Any changes before I write the spec?</p>
