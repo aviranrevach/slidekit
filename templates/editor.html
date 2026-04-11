@@ -163,6 +163,7 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2.5px; cursor: ns-resize;
   box-shadow: 0 0 0 2px rgba(94,106,210,0.2), 0 2px 6px rgba(0,0,0,0.5);
+  user-select: none; -webkit-user-select: none;
 }
 .ds-stripe { width: 7px; height: 1.5px; border-radius: 1px; background: rgba(255,255,255,0.55); }
 
@@ -356,6 +357,9 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   box-shadow: 0 4px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 400;
 }
 #queue-pill.visible { display: inline-flex; }
+#queue-pill.done { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+#queue-pill.done .qp-badge { background: #16a34a; }
+#queue-pill.done .qp-phrase { color: #4ade80; }
 .qp-badge { background: var(--accent); color: white; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 7px; min-width: 20px; text-align: center; }
 .qp-divider { width: 1px; height: 12px; background: var(--border-hi); }
 .qp-phrase { font-family: monospace; font-size: 10px; color: #8c94e0; font-weight: 600; }
@@ -789,6 +793,63 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
     'blur-in':  { from:{opacity:0,filter:'blur(12px)'}, to:{opacity:1,filter:'blur(0px)'} },
     wipe:       { from:{clipPath:'inset(0 100% 0 0)'}, to:{clipPath:'inset(0 0% 0 0)'} },
   };
+
+  // Idle / continuous loop animations — triggered by data-anim-idle attribute
+  function initIdleAnimations(container) {
+    if (!root.gsap) return;
+    container.querySelectorAll('[data-anim-idle]').forEach(el => {
+      const type = el.dataset.animIdle;
+      const dur  = parseFloat(el.dataset.animIdleDuration) || 3;
+      if (type === 'breathe') {
+        root.gsap.to(el, { scale:1.03, duration:dur/2, repeat:-1, yoyo:true, ease:'sine.inOut' });
+      } else if (type === 'float') {
+        root.gsap.to(el, { y:-8, duration:dur/2, repeat:-1, yoyo:true, ease:'sine.inOut' });
+      } else if (type === 'pulse-glow') {
+        root.gsap.to(el, { opacity:0.6, duration:dur/2, repeat:-1, yoyo:true, ease:'sine.inOut' });
+      } else if (type === 'spin') {
+        root.gsap.to(el, { rotation:360, duration:dur, repeat:-1, ease:'none' });
+      }
+    });
+  }
+
+  // Emphasis animations — one-shot attention-getters, triggered by data-anim-emphasis
+  function initEmphasisAnimations(container) {
+    if (!root.gsap) return;
+    container.querySelectorAll('[data-anim-emphasis]').forEach(el => {
+      const type  = el.dataset.animEmphasis;
+      const delay = parseFloat(el.dataset.animEmphasisDelay) || 0;
+      const dur   = parseFloat(el.dataset.animEmphasisDuration) || 0.6;
+      if (type === 'bounce') {
+        root.gsap.to(el, { y:-12, duration:dur/3, delay, ease:'power2.out', yoyo:true, repeat:3 });
+      } else if (type === 'shake') {
+        root.gsap.to(el, { x:8, duration:dur/6, delay, ease:'power1.inOut', yoyo:true, repeat:5 });
+      } else if (type === 'flash') {
+        root.gsap.to(el, { opacity:0, duration:dur/4, delay, repeat:3, yoyo:true });
+      } else if (type === 'pop') {
+        root.gsap.fromTo(el, {scale:1}, { scale:1.12, duration:dur/2, delay, ease:'back.out(3)', yoyo:true, repeat:1 });
+      }
+    });
+  }
+
+  // Hover animations — wire mouseenter/mouseleave from data-anim-hover
+  function initHoverAnimations(container) {
+    if (!root.gsap) return;
+    container.querySelectorAll('[data-anim-hover]').forEach(el => {
+      const type = el.dataset.animHover;
+      const dur  = parseFloat(el.dataset.animHoverDuration) || 0.25;
+      if (type === 'lift') {
+        el.addEventListener('mouseenter', () => root.gsap.to(el, { y:-6, scale:1.02, duration:dur, ease:'power2.out' }));
+        el.addEventListener('mouseleave', () => root.gsap.to(el, { y:0, scale:1, duration:dur, ease:'power2.out' }));
+      } else if (type === 'glow') {
+        el.addEventListener('mouseenter', () => root.gsap.to(el, { filter:'brightness(1.3)', duration:dur }));
+        el.addEventListener('mouseleave', () => root.gsap.to(el, { filter:'brightness(1)', duration:dur }));
+      } else if (type === 'scale') {
+        el.addEventListener('mouseenter', () => root.gsap.to(el, { scale:1.05, duration:dur, ease:'power2.out' }));
+        el.addEventListener('mouseleave', () => root.gsap.to(el, { scale:1, duration:dur, ease:'power2.out' }));
+      }
+    });
+  }
+
   function initAnimations(container, mode) {
     function playIn(frameEl) {
       frameEl.querySelectorAll('[data-anim-in]').forEach(el => {
@@ -798,6 +859,9 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
           delay: parseFloat(el.dataset.animInDelay)||0, ease:'power2.out'
         });
       });
+      initIdleAnimations(frameEl);
+      initEmphasisAnimations(frameEl);
+      initHoverAnimations(frameEl);
     }
     function playOut(frameIndex) {
       var frameEl = container.querySelectorAll('.present-frame')[frameIndex];
@@ -872,11 +936,18 @@ function renderQueue() {
   document.getElementById('qpanel-count').textContent = pendingCount || count;
 
   if (count === 0) {
-    pill.classList.remove('visible');
+    pill.classList.remove('visible', 'done');
     panel.classList.remove('visible');
     queueExpanded = false;
     return;
   }
+
+  // All executed state: show green "Done" pill
+  const allDone = pendingCount === 0 && executedCount > 0;
+  pill.classList.toggle('done', allDone);
+  document.getElementById('qp-badge-count').textContent = allDone ? '✓' : (pendingCount || count);
+  const phraseEl = pill.querySelector('.qp-phrase');
+  if (phraseEl) phraseEl.textContent = allDone ? 'Done!' : 'slideit';
 
   if (queueExpanded) {
     pill.classList.remove('visible');
@@ -1489,9 +1560,13 @@ function buildDomToolbar(el, frameId) {
 
   // Behaviour dropdown
   const behaviourDD = makeDropdown('Modify behaviour', [
-    { icon: '<path d="m5 3 14 9-14 9V3z"/>', label: 'Add animation', action: c => queueAction('Add an animation to this element', c) },
-    { icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', label: 'Change animation timing', action: c => queueAction('Change the animation timing for this element', c) },
-    { icon: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>', label: 'Remove animation', action: c => queueAction('Remove the animation from this element', c) },
+    { icon: '<path d="m5 3 14 9-14 9V3z"/>', label: 'Entrance animation', action: c => queueAction('Add an entrance animation to this element (data-anim-in: fly-up, fade, scale-in, blur-in, wipe, fly-left, or fly-right — use data-anim-in-duration and data-anim-in-delay)', c) },
+    { icon: '<path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>', label: 'Hover interaction', action: c => queueAction('Add a hover animation to this element (data-anim-hover: lift, glow, or scale — use data-anim-hover-duration)', c) },
+    { icon: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>', label: 'Idle / breathing', action: c => queueAction('Add an idle looping animation to this element (data-anim-idle: breathe, float, pulse-glow, or spin — use data-anim-idle-duration)', c) },
+    { icon: '<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/>', label: 'Emphasis / attention', action: c => queueAction('Add an emphasis animation to this element (data-anim-emphasis: bounce, shake, flash, or pop — use data-anim-emphasis-delay and data-anim-emphasis-duration)', c) },
+    'sep',
+    { icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', label: 'Change animation timing', action: c => queueAction('Adjust the animation timing (duration, delay, or easing) for this element', c) },
+    { icon: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>', label: 'Remove all animations', action: c => queueAction('Remove all animations from this element (remove data-anim-in, data-anim-idle, data-anim-hover, data-anim-emphasis attributes)', c) },
   ]);
   buttons.appendChild(makeDropdownBtn(
     '<path d="m5 3 14 9-14 9V3z"/>',
@@ -1559,13 +1634,14 @@ function buildDomScrubber(el) {
   ancestors.forEach(ancestor => {
     const dot = document.createElement('div');
     dot.className = 'ds-dot';
-    dot.title = ancestor.tagName.toLowerCase();
+    dot.title = '↑ Parent: ' + ancestor.tagName.toLowerCase();
     dot.onclick = (e) => { e.stopPropagation(); selectDomElement(ancestor, frame.id); };
     wrap.appendChild(dot);
   });
 
   const pill = document.createElement('div');
   pill.className = 'ds-pill';
+  pill.title = 'Drag up/down to move between parent/child levels · Click dots to jump';
   for (let i = 0; i < 3; i++) {
     const stripe = document.createElement('div');
     stripe.className = 'ds-stripe';
@@ -1574,24 +1650,32 @@ function buildDomScrubber(el) {
 
   let dragStartY = 0;
   let dragging = false;
-  pill.addEventListener('mousedown', (e) => { e.stopPropagation(); dragging = true; dragStartY = e.clientY; });
-  document.addEventListener('mousemove', (e) => {
+  pill.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+    e.preventDefault(); // prevent text selection while dragging
+    dragging = true;
+    dragStartY = e.clientY;
+  });
+  const onMouseMove = (e) => {
     if (!dragging) return;
+    e.preventDefault();
     const delta = e.clientY - dragStartY;
     if (Math.abs(delta) > 20) {
       dragging = false;
       if (delta < 0 && ancestors.length > 0) selectDomElement(ancestors[ancestors.length - 1], frame.id);
       else if (delta > 0 && firstChild) selectDomElement(firstChild, frame.id);
     }
-  });
-  document.addEventListener('mouseup', () => { dragging = false; });
+  };
+  const onMouseUp = () => { dragging = false; };
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
 
   wrap.appendChild(pill);
 
   if (firstChild) {
     const dot = document.createElement('div');
     dot.className = 'ds-dot';
-    dot.title = firstChild.tagName.toLowerCase();
+    dot.title = '↓ Child: ' + firstChild.tagName.toLowerCase();
     dot.onclick = (e) => { e.stopPropagation(); selectDomElement(firstChild, frame.id); };
     wrap.appendChild(dot);
   }
@@ -1636,8 +1720,21 @@ function selectDomElement(el, frameId) {
   requestAnimationFrame(() => {
     const tbW = toolbar.offsetWidth;
     const tbH = toolbar.offsetHeight;
-    toolbar.style.left = Math.max(8, rect.left + rect.width / 2 - tbW / 2) + 'px';
-    toolbar.style.top = (rect.top - tbH - 14) + 'px';
+    // Clamp horizontally so toolbar never goes off-screen
+    const leftIdeal = rect.left + rect.width / 2 - tbW / 2;
+    const leftClamped = Math.max(8, Math.min(leftIdeal, window.innerWidth - tbW - 8));
+    toolbar.style.left = leftClamped + 'px';
+    // Flip below element if not enough space above
+    const spaceAbove = rect.top;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceAbove >= tbH + 14) {
+      toolbar.style.top = (rect.top - tbH - 14) + 'px';
+    } else if (spaceBelow >= tbH + 14) {
+      toolbar.style.top = (rect.bottom + 14) + 'px';
+    } else {
+      // Not enough room either side — pin to top of viewport with margin
+      toolbar.style.top = '8px';
+    }
   });
 
   const scrubber = buildDomScrubber(el);
@@ -1691,6 +1788,44 @@ function initElementSelection() {
         const frame = selectedDomEl.closest('.present-frame');
         if (frame) selectDomElement(sibling, frame.id);
       }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const frame = selectedDomEl.closest('.present-frame');
+      if (e.shiftKey) {
+        // Shift+Up = previous sibling (same as Shift+Tab)
+        const prev = selectedDomEl.previousElementSibling;
+        if (frame && prev) selectDomElement(prev, frame.id);
+      } else {
+        // Up = parent
+        const parent = selectedDomEl.parentElement;
+        if (frame && parent && parent !== frame) selectDomElement(parent, frame.id);
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const frame = selectedDomEl.closest('.present-frame');
+      if (e.shiftKey) {
+        // Shift+Down = next sibling (same as Tab)
+        const next = selectedDomEl.nextElementSibling;
+        if (frame && next) selectDomElement(next, frame.id);
+      } else {
+        // Down = first child
+        const firstChild = selectedDomEl.children[0];
+        if (frame && firstChild) selectDomElement(firstChild, frame.id);
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const frame = selectedDomEl.closest('.present-frame');
+      const prev = selectedDomEl.previousElementSibling;
+      if (frame && prev) selectDomElement(prev, frame.id);
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const frame = selectedDomEl.closest('.present-frame');
+      const next = selectedDomEl.nextElementSibling;
+      if (frame && next) selectDomElement(next, frame.id);
     }
   });
 }
