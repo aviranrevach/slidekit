@@ -2087,8 +2087,8 @@ async function openPreview() {
 }
 
 function buildPreviewHTML(json) {
-  // Always use slides (1280×720 canvas) for preview — scroll mode is editor-only
-  const isSlides = true;
+  // Preview respects meta.navigation: slides = fixed canvas, scroll = continuous page
+  const isSlides = (json.meta?.navigation !== 'scroll');
   const rendererScript = document.querySelector('script:not([src])').textContent;
 
   const baseCSS =
