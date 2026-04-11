@@ -1183,6 +1183,50 @@ function buildFrameToolbar(frameId, frameData) {
   exploreWrapper.appendChild(explorePop);
   tb.appendChild(exploreWrapper);
 
+  // Replay animations (only if frame has entrance-animated elements)
+  const frameEl = document.getElementById(frameId);
+  const hasAnimated = frameEl && (
+    frameEl.querySelector('.t-item, .block-card, .role-card, .mapping-row, [data-anim-in]') !== null
+  );
+  if (hasAnimated) {
+    tb.appendChild(makeBtn(
+      `<polygon points="5,3 19,12 5,21"/><path d="M19 3v18"/>`,
+      'Replay animations', '', () => {
+        const el = document.getElementById(frameId);
+        if (!el) return;
+        // Reset visible classes
+        el.querySelectorAll('.t-item, .block-card, .role-card, .mapping-row').forEach(e => {
+          e.classList.remove('visible');
+        });
+        // Reset data-anim-in elements
+        if (window.PresentRenderer) {
+          el.querySelectorAll('[data-anim-in]').forEach(e => {
+            e.style.opacity = '0';
+          });
+        }
+        // Re-trigger after short delay
+        setTimeout(() => {
+          [
+            ['.t-item', 100],
+            ['.block-card', 80],
+            ['.role-card', 100],
+            ['.mapping-row', 80],
+          ].forEach(([sel, gap]) => {
+            el.querySelectorAll(sel).forEach((e, i) => {
+              setTimeout(() => e.classList.add('visible'), i * gap + 100);
+            });
+          });
+          if (window.PresentRenderer) {
+            PresentRenderer.initAnimations(el, 'scroll');
+          }
+        }, 50);
+      }
+    ));
+    const replaySep = document.createElement('div');
+    replaySep.className = 'ftb-sep';
+    tb.appendChild(replaySep);
+  }
+
   // Separator
   const sep = document.createElement('div');
   sep.className = 'ftb-sep';
