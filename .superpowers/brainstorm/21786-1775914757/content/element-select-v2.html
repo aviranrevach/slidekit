@@ -1,0 +1,247 @@
+<h2>Element Selection — v2</h2>
+<p class="subtitle">Centered toolbar · "Modify" action · Side rail layer control</p>
+
+<style>
+  .demo-shell {
+    background: #08090d; border-radius: 10px; overflow: visible;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    position: relative;
+  }
+  .demo-topbar {
+    background: #0d0e12; border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 38px; padding: 0 14px; display: flex; align-items: center;
+    font-size: 11px; color: #52535e; border-radius: 10px 10px 0 0;
+  }
+  .demo-canvas {
+    padding: 32px 40px 40px; position: relative;
+    background: #08090d; border-radius: 0 0 10px 10px;
+  }
+  .demo-frame {
+    background: linear-gradient(135deg, #0a0a0f 0%, #0f1020 100%);
+    border-radius: 8px; padding: 44px 52px;
+    position: relative; border: 1.5px solid rgba(94,106,210,0.2);
+  }
+  .demo-eyebrow { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7c6af7; margin-bottom: 14px; }
+  .demo-h1 { font-size: 34px; font-weight: 700; color: #e8e8f0; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 18px; }
+  .demo-h1 em { color: #7c6af7; font-style: italic; }
+  .demo-body { font-size: 13px; color: #6b6b8a; line-height: 1.65; max-width: 420px; }
+
+  /* ── Selected element ── */
+  .el-wrap {
+    position: relative; display: inline-block; width: 100%;
+  }
+
+  /* Centered toolbar above */
+  .sel-toolbar {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%; transform: translateX(-50%);
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 4px;
+    display: flex; align-items: center; gap: 2px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.4);
+    white-space: nowrap; z-index: 10;
+  }
+  .stb {
+    display: flex; align-items: center; gap: 5px;
+    background: transparent; border: none; color: #8a8a9a;
+    border-radius: 5px; padding: 5px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
+  }
+  .stb:hover { background: rgba(255,255,255,0.06); color: #e8e8ec; }
+  .stb.accent { color: #8c94e0; }
+  .stb.accent:hover { background: rgba(94,106,210,0.12); color: #a5b4fc; }
+  .stb-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+  /* ── Side rail layer control ── */
+  .layer-rail {
+    position: absolute;
+    right: -36px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 6px 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    cursor: ns-resize;
+    width: 24px;
+    z-index: 10;
+  }
+  .lr-up {
+    color: #52535e; display: flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 4px; cursor: pointer;
+    background: none; border: none; padding: 0;
+  }
+  .lr-up:hover { color: #e8e8ec; background: rgba(255,255,255,0.06); }
+  .lr-dots {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 6px 0; align-items: center;
+  }
+  .lr-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); cursor: pointer;
+    transition: all 0.12s; position: relative;
+  }
+  .lr-dot.active {
+    background: #5e6ad2; width: 7px; height: 7px; margin: 0 -1px;
+  }
+  .lr-dot:hover { background: rgba(94,106,210,0.5); }
+
+  /* Tooltip on active dot */
+  .lr-dot.active::after {
+    content: attr(data-label);
+    position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    color: #8c94e0; font-size: 9px; padding: 2px 7px; border-radius: 4px;
+    white-space: nowrap; font-family: monospace;
+  }
+
+  .lr-down {
+    color: #52535e; display: flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 4px; cursor: pointer;
+    background: none; border: none; padding: 0;
+  }
+  .lr-down:hover { color: #e8e8ec; background: rgba(255,255,255,0.06); }
+
+  .drag-hint {
+    font-size: 8px; color: #3e3e4a; text-align: center; margin-top: 3px;
+    writing-mode: horizontal-tb; line-height: 1.3;
+  }
+
+  /* Selection outlines */
+  .el-selected { outline: 2px solid #5e6ad2; outline-offset: 4px; border-radius: 3px; }
+  .el-selected-parent { outline: 1.5px dashed rgba(94,106,210,0.45); outline-offset: 12px; border-radius: 6px; }
+
+  /* Kbd badge */
+  .kbd-row {
+    display: flex; gap: 10px; align-items: center; justify-content: center;
+    margin-top: 12px;
+  }
+  .kbd-group { display: flex; align-items: center; gap: 5px; }
+  .kbd {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 2px 6px; font-size: 9px; color: #52535e; font-family: monospace;
+  }
+  .kbd-label { font-size: 10px; color: #3e3e4a; }
+
+  .section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; font-weight: 600; margin-bottom: 10px; }
+</style>
+
+<!-- State 1: h1 selected -->
+<div style="margin-bottom: 36px;">
+  <div class="section-label">State 1 — h1 selected</div>
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-canvas">
+      <div class="demo-frame">
+        <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+
+        <div class="el-wrap">
+          <!-- Centered toolbar -->
+          <div class="sel-toolbar">
+            <button class="stb accent">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Talk to Claude
+            </button>
+            <div class="stb-sep"></div>
+            <button class="stb">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modify
+            </button>
+            <div class="stb-sep"></div>
+            <span style="font-size:9px;color:#3e3e4a;padding:0 4px;font-family:monospace;">h1</span>
+          </div>
+
+          <!-- Selected element -->
+          <div class="demo-h1 el-selected">
+            From <em>Hierarchy</em><br>to Intelligence
+          </div>
+
+          <!-- Side rail layer control -->
+          <div class="layer-rail" title="Drag up/down to change level">
+            <button class="lr-up">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <div class="lr-dots">
+              <div class="lr-dot" data-label="div.hero-section" title="div.hero-section"></div>
+              <div class="lr-dot" data-label="section" title="section"></div>
+              <div class="lr-dot active" data-label="h1" title="h1 (current)"></div>
+            </div>
+            <button class="lr-down">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="demo-body">
+          A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- State 2: scrubbed up to parent -->
+<div style="margin-bottom: 28px;">
+  <div class="section-label">State 2 — Scrubbed up 2 levels to section container</div>
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-canvas">
+      <div class="demo-frame">
+
+        <div class="el-wrap">
+          <!-- Toolbar still centered, now shows parent tag -->
+          <div class="sel-toolbar">
+            <button class="stb accent">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Talk to Claude
+            </button>
+            <div class="stb-sep"></div>
+            <button class="stb">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modify
+            </button>
+            <div class="stb-sep"></div>
+            <span style="font-size:9px;color:#3e3e4a;padding:0 4px;font-family:monospace;">div.hero-section</span>
+          </div>
+
+          <!-- Parent selected — wider dashed outline -->
+          <div class="el-selected-parent" style="display:block;">
+            <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+            <div class="demo-h1">From <em>Hierarchy</em><br>to Intelligence</div>
+            <div class="demo-body" style="margin-top:14px;">
+              A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+            </div>
+          </div>
+
+          <!-- Side rail — active dot moved up -->
+          <div class="layer-rail">
+            <button class="lr-up">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <div class="lr-dots">
+              <div class="lr-dot active" data-label="div.hero-section" title="current"></div>
+              <div class="lr-dot" data-label="section" title="section"></div>
+              <div class="lr-dot" data-label="h1" title="h1"></div>
+            </div>
+            <button class="lr-down">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard shortcuts -->
+<div class="kbd-row">
+  <div class="kbd-group"><kbd class="kbd">Tab</kbd><span class="kbd-label">next sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">⇧ Tab</kbd><span class="kbd-label">prev sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">Esc</kbd><span class="kbd-label">deselect</span></div>
+  <div class="kbd-group">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3e3e4a" stroke-width="1.7" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    <span class="kbd-label">drag rail to scrub layers</span>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Does this feel right? Approve to write the spec.</p>

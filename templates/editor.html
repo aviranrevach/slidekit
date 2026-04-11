@@ -1229,16 +1229,27 @@ function setFrameView(mode) {
   if (currentJSON) renderFrameStrip(currentJSON.frames);
 }
 
+function extractRawHeading(rawHTML) {
+  if (!rawHTML) return '';
+  const m = rawHTML.match(/<h[12][^>]*>([\s\S]*?)<\/h[12]>/i);
+  if (!m) return '';
+  return m[1].replace(/<[^>]+>/g, '').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&nbsp;/g,' ').replace(/&#[0-9]+;/g,'').trim().slice(0, 60);
+}
+
 function getFrameTitle(frame) {
   const heading = (frame.elements || []).find(e => e.type === 'heading' || e.type === 'subheading');
-  if (heading?.content) return heading.content.slice(0, 18);
-  return frame.layout || 'frame';
+  if (heading?.content) return heading.content.slice(0, 32);
+  if (frame.rawHTML) return extractRawHeading(frame.rawHTML).slice(0, 32) || 'Frame';
+  return 'Frame';
 }
 
 function getThumbHeading(frame) {
-  if (!frame.elements) return '';
-  const el = frame.elements.find(e => e.type === 'heading');
-  return el?.content || '';
+  if (frame.elements) {
+    const el = frame.elements.find(e => e.type === 'heading');
+    if (el?.content) return el.content;
+  }
+  if (frame.rawHTML) return extractRawHeading(frame.rawHTML);
+  return '';
 }
 
 function getThumbEyebrow(frame) {
@@ -1248,14 +1259,21 @@ function getThumbEyebrow(frame) {
 }
 
 function applyThumbBackground(el, frame) {
-  if (!frame.background) return;
   const bg = frame.background;
-  if (bg.type === 'color' || bg.type === 'gradient') {
+  if (bg?.type === 'color' || bg?.type === 'gradient') {
     el.style.background = bg.value;
-  } else if (bg.type === 'image') {
+    return;
+  }
+  if (bg?.type === 'image') {
     el.style.backgroundImage = `url(${bg.value})`;
     el.style.backgroundSize = 'cover';
     el.style.backgroundPosition = 'center';
+    return;
+  }
+  // For raw frames: extract background from the outermost div's inline style
+  if (frame.rawHTML) {
+    const m = frame.rawHTML.match(/background(?:-color)?:\s*([^;'"]+)/);
+    if (m) el.style.background = m[1].trim();
   }
 }
 
@@ -1468,8 +1486,8 @@ async function openPreview() {
 }
 
 function buildPreviewHTML(json) {
-  // canvasMode drives the preview layout: frame = slides, scroll = continuous page
-  const isSlides = (canvasMode === 'frame');
+  // Always use slides (1280×720 canvas) for preview — scroll mode is editor-only
+  const isSlides = true;
   const rendererScript = document.querySelector('script:not([src])').textContent;
 
   const baseCSS =

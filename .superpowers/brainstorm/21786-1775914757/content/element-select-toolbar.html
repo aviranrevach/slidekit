@@ -1,0 +1,229 @@
+<h2>Element Selection Toolbar — Notion-style</h2>
+<p class="subtitle">Click an element → toolbar floats above it. Tab/Shift+Tab for siblings, layer scrubber for parents.</p>
+
+<style>
+  .demo-shell {
+    background: #08090d; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    position: relative; min-height: 420px;
+  }
+  .demo-topbar {
+    background: #0d0e12; border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 38px; padding: 0 14px; display: flex; align-items: center;
+    font-size: 11px; color: #52535e;
+  }
+
+  /* The slide frame area */
+  .demo-frame {
+    background: linear-gradient(135deg, #0a0a0f 0%, #0f1020 100%);
+    margin: 20px 60px; border-radius: 8px; padding: 40px 48px;
+    position: relative; border: 1.5px solid rgba(94,106,210,0.25);
+  }
+
+  /* Elements inside frame */
+  .demo-eyebrow {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #7c6af7; margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+  .demo-h1 {
+    font-size: 36px; font-weight: 700; color: #e8e8f0;
+    line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px;
+  }
+  .demo-h1 em { color: #7c6af7; font-style: italic; }
+  .demo-body {
+    font-size: 14px; color: #6b6b8a; line-height: 1.65;
+    max-width: 440px;
+  }
+
+  /* Selection highlight states */
+  .el-hover { outline: 1px dashed rgba(94,106,210,0.4); outline-offset: 3px; border-radius: 3px; }
+  .el-selected { outline: 2px solid #5e6ad2; outline-offset: 4px; border-radius: 3px; }
+  .el-selected-parent { outline: 1.5px solid rgba(94,106,210,0.4); outline-offset: 8px; border-radius: 6px; }
+
+  /* Floating toolbar */
+  .sel-toolbar {
+    position: absolute; top: -40px; left: 0;
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 4px;
+    display: flex; align-items: center; gap: 2px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 1px 3px rgba(0,0,0,0.4);
+    white-space: nowrap;
+  }
+  .stb {
+    display: flex; align-items: center; gap: 4px;
+    background: transparent; border: none; color: #8a8a9a;
+    border-radius: 5px; padding: 5px 8px; font-size: 11px; cursor: pointer;
+    font-family: inherit;
+  }
+  .stb:hover { background: rgba(255,255,255,0.06); color: #e8e8ec; }
+  .stb.accent { color: #8c94e0; }
+  .stb.accent:hover { background: rgba(94,106,210,0.12); color: #a5b4fc; }
+  .stb-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+  /* Layer breadcrumb */
+  .layer-crumb {
+    position: absolute; bottom: -32px; left: 0;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: #3e3e4a;
+  }
+  .layer-crumb span { color: #52535e; }
+  .layer-crumb .active { color: #8c94e0; font-weight: 600; }
+  .layer-crumb .sep { color: #2e2e3a; }
+
+  /* Layer scrubber */
+  .layer-scrubber {
+    display: flex; align-items: center; gap: 3px;
+  }
+  .ls-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); cursor: pointer;
+    transition: all 0.1s;
+  }
+  .ls-dot.active { background: #5e6ad2; transform: scale(1.3); }
+  .ls-dot:hover { background: rgba(94,106,210,0.5); }
+
+  /* Kbd hints */
+  .kbd-hints {
+    position: absolute; bottom: -28px; right: 0;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .kbd {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 1px 5px; font-size: 9px; color: #3e3e4a;
+    font-family: monospace;
+  }
+  .kbd-label { font-size: 9px; color: #2e2e3a; }
+
+  .annotation {
+    background: rgba(94,106,210,0.07); border: 1px solid rgba(94,106,210,0.15);
+    border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #8a8a9a;
+    line-height: 1.6; margin-top: 20px;
+  }
+  .annotation strong { color: #e8e8ec; }
+</style>
+
+<!-- State 1: h1 selected -->
+<div class="section" style="margin-bottom: 32px;">
+  <div class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#5e6ad2;font-weight:600;margin-bottom:10px;">State 1 — Element selected (h1)</div>
+
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-frame">
+      <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+
+      <!-- Selected h1 with toolbar -->
+      <div style="position:relative;display:inline-block;width:100%;">
+        <div class="sel-toolbar">
+          <!-- Talk to AI -->
+          <button class="stb accent">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Talk to Claude
+          </button>
+          <div class="stb-sep"></div>
+          <!-- Add note -->
+          <button class="stb">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Note
+          </button>
+          <div class="stb-sep"></div>
+          <!-- Layer scrubber -->
+          <div style="display:flex;align-items:center;gap:6px;padding:0 6px;">
+            <span style="font-size:9px;color:#3e3e4a;">Layer</span>
+            <div class="layer-scrubber">
+              <div class="ls-dot" title="body > div"></div>
+              <div class="ls-dot" title="section.hero"></div>
+              <div class="ls-dot active" title="h1 (current)"></div>
+            </div>
+          </div>
+          <div class="stb-sep"></div>
+          <!-- Tab hint -->
+          <button class="stb" style="font-size:10px;gap:3px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            Sibling
+          </button>
+        </div>
+
+        <div class="demo-h1 el-selected" style="position:relative;">
+          From <em>Hierarchy</em><br>to Intelligence
+        </div>
+
+        <!-- Layer breadcrumb below -->
+        <div class="layer-crumb">
+          <span>div</span><span class="sep">›</span>
+          <span>section</span><span class="sep">›</span>
+          <span class="active">h1</span>
+        </div>
+      </div>
+
+      <div class="demo-body" style="margin-top:28px;">
+        A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- State 2: parent selected after scrubbing up -->
+<div class="section" style="margin-bottom: 32px;">
+  <div class="label" style="font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#5e6ad2;font-weight:600;margin-bottom:10px;">State 2 — Scrubbed up to parent container</div>
+
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-frame">
+
+      <div style="position:relative;">
+        <!-- Toolbar on parent -->
+        <div class="sel-toolbar">
+          <button class="stb accent">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Talk to Claude
+          </button>
+          <div class="stb-sep"></div>
+          <button class="stb">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Note
+          </button>
+          <div class="stb-sep"></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:0 6px;">
+            <span style="font-size:9px;color:#3e3e4a;">Layer</span>
+            <div class="layer-scrubber">
+              <div class="ls-dot" title="body > div"></div>
+              <div class="ls-dot active" title="section.hero (current)"></div>
+              <div class="ls-dot" title="h1"></div>
+            </div>
+          </div>
+          <div class="stb-sep"></div>
+          <button class="stb" style="font-size:10px;gap:3px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            Sibling
+          </button>
+        </div>
+
+        <!-- Parent container selected (dashed, wider outline) -->
+        <div style="outline: 1.5px solid rgba(94,106,210,0.5); outline-offset: 10px; border-radius: 6px; padding: 4px;">
+          <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+          <div class="demo-h1">From <em>Hierarchy</em><br>to Intelligence</div>
+          <div class="demo-body" style="margin-top:16px;">
+            A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+          </div>
+        </div>
+
+        <div class="layer-crumb">
+          <span>div</span><span class="sep">›</span>
+          <span class="active">section</span><span class="sep">›</span>
+          <span>h1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="annotation">
+  <strong>Keyboard shortcuts:</strong><br>
+  <strong>Click</strong> — select element · <strong>Shift+click</strong> or drag scrubber left — go up to parent · <strong>Tab</strong> — next sibling · <strong>Shift+Tab</strong> — previous sibling · <strong>Esc</strong> — deselect<br><br>
+  <strong>Toolbar actions:</strong> "Talk to Claude" writes selected element context to selection.json + opens queue note. "Note" adds a queue note tagged to this element. Layer scrubber shows depth — click dots to jump levels.
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:16px;">Does this interaction model feel right? Any adjustments before I write the spec?</p>

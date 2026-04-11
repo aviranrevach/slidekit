@@ -1,0 +1,218 @@
+<h2>Element Selection — v5</h2>
+<p class="subtitle">"Tell Claude to" as header row · Chat · Design/Content/Behaviour (tooltip only) · Pushpin custom · Pill dragger</p>
+
+<style>
+  .demo-shell {
+    background: #08090d; border-radius: 10px; overflow: visible;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  }
+  .demo-topbar {
+    background: #0d0e12; border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 38px; padding: 0 14px; display: flex; align-items: center;
+    font-size: 11px; color: #52535e; border-radius: 10px 10px 0 0;
+  }
+  .demo-canvas {
+    padding: 72px 56px 40px 40px; position: relative;
+    background: #08090d; border-radius: 0 0 10px 10px;
+  }
+  .demo-frame {
+    background: linear-gradient(135deg, #0a0a0f 0%, #0f1020 100%);
+    border-radius: 8px; padding: 44px 52px;
+    position: relative; border: 1.5px solid rgba(94,106,210,0.2);
+  }
+  .demo-eyebrow { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7c6af7; margin-bottom: 14px; }
+  .demo-h1 { font-size: 32px; font-weight: 700; color: #e8e8f0; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 16px; }
+  .demo-h1 em { color: #7c6af7; font-style: italic; }
+  .demo-body { font-size: 13px; color: #6b6b8a; line-height: 1.65; max-width: 400px; }
+
+  .el-wrap { position: relative; display: block; width: 100%; }
+  .el-label {
+    position: absolute; top: -11px; left: -2px;
+    background: #5e6ad2; color: white;
+    font-size: 9px; font-weight: 600; font-family: monospace;
+    padding: 1px 6px; border-radius: 4px; z-index: 10; line-height: 1.6;
+  }
+  .el-selected { outline: 2px solid #5e6ad2; outline-offset: 5px; border-radius: 3px; }
+
+  /* ── Toolbar ── */
+  .sel-toolbar-wrap {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: stretch;
+    z-index: 20; white-space: nowrap;
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+
+  /* Header row inside the toolbar */
+  .toolbar-header {
+    font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: #3e3e4a; font-weight: 600;
+    padding: 5px 12px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
+  }
+
+  .toolbar-buttons {
+    display: flex; align-items: center; gap: 2px; padding: 4px;
+  }
+
+  .stb {
+    display: flex; align-items: center; gap: 5px;
+    background: transparent; border: none; color: #8a8a9a;
+    border-radius: 6px; padding: 6px 11px; font-size: 11px;
+    cursor: pointer; font-family: inherit; font-weight: 500;
+    position: relative;
+  }
+  .stb:hover { background: rgba(255,255,255,0.06); color: #e8e8ec; }
+  .stb.accent { color: #8c94e0; }
+  .stb.accent:hover { background: rgba(94,106,210,0.12); color: #a5b4fc; }
+  .stb-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.07); margin: 0 1px; }
+
+  /* Tooltip on hover */
+  .stb[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #13141a; border: 1px solid rgba(255,255,255,0.1);
+    color: #e8e8ec; font-size: 10px; padding: 3px 8px; border-radius: 5px;
+    white-space: nowrap; pointer-events: none; font-weight: 400;
+  }
+
+  /* ── Pill dragger (side rail) ── */
+  .layer-rail {
+    position: absolute; right: -42px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px; z-index: 10;
+  }
+
+  .lr-dots-above, .lr-dots-below {
+    display: flex; flex-direction: column; gap: 5px; align-items: center;
+  }
+  .lr-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); cursor: pointer;
+    transition: all 0.12s;
+  }
+  .lr-dot:hover { background: rgba(94,106,210,0.4); }
+
+  /* The active pill handle */
+  .lr-pill {
+    background: #5e6ad2;
+    border-radius: 20px;
+    width: 28px; height: 44px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; cursor: ns-resize;
+    box-shadow: 0 0 0 3px rgba(94,106,210,0.2), 0 4px 12px rgba(0,0,0,0.5);
+    transition: box-shadow 0.15s;
+  }
+  .lr-pill:hover { box-shadow: 0 0 0 4px rgba(94,106,210,0.3), 0 4px 16px rgba(0,0,0,0.6); }
+
+  /* Drag stripe indicator inside pill */
+  .lr-stripe {
+    width: 12px; height: 2px; border-radius: 1px;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; font-weight: 600; margin-bottom: 10px; }
+  .kbd-row { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .kbd-group { display: flex; align-items: center; gap: 5px; }
+  .kbd { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; font-size: 9px; color: #52535e; font-family: monospace; }
+  .kbd-label { font-size: 10px; color: #3e3e4a; }
+</style>
+
+<div class="section-label">h1 selected</div>
+<div class="demo-shell">
+  <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+  <div class="demo-canvas">
+    <div class="demo-frame">
+      <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+
+      <div class="el-wrap" style="margin-bottom: 16px;">
+        <span class="el-label">h1</span>
+
+        <!-- Toolbar: header + buttons in one pill -->
+        <div class="sel-toolbar-wrap">
+          <div class="toolbar-header">Tell Claude to</div>
+          <div class="toolbar-buttons">
+
+            <!-- Chat -->
+            <button class="stb accent" data-tip="Open chat with this element as context">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Chat
+            </button>
+
+            <div class="stb-sep"></div>
+
+            <!-- Design -->
+            <button class="stb" data-tip="Modify: Design — restyle, color, layout">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            </button>
+
+            <!-- Content -->
+            <button class="stb" data-tip="Modify: Content — rewrite, simplify, punch up">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            </button>
+
+            <!-- Behaviour -->
+            <button class="stb" data-tip="Modify: Behaviour — animation, interaction">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="m5 3 14 9-14 9V3z"/></svg>
+            </button>
+
+            <div class="stb-sep"></div>
+
+            <!-- Custom task — pushpin -->
+            <button class="stb" data-tip="Custom task — add your own instruction">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76z"/></svg>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Selected element -->
+        <div class="demo-h1 el-selected">
+          From <em>Hierarchy</em><br>to Intelligence
+        </div>
+
+        <!-- Side rail: dots above + pill handle + dots below -->
+        <div class="layer-rail">
+          <!-- 2 parent levels above -->
+          <div class="lr-dots-above">
+            <div class="lr-dot" title="div.frame-root"></div>
+            <div class="lr-dot" title="section.content"></div>
+          </div>
+
+          <!-- Active pill handle -->
+          <div class="lr-pill">
+            <div class="lr-stripe"></div>
+            <div class="lr-stripe"></div>
+            <div class="lr-stripe"></div>
+          </div>
+
+          <!-- No children — nothing below -->
+          <div class="lr-dots-below"></div>
+        </div>
+
+      </div>
+
+      <div class="demo-body">
+        A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="kbd-row">
+  <div class="kbd-group"><kbd class="kbd">Tab</kbd><span class="kbd-label">next sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">⇧ Tab</kbd><span class="kbd-label">prev sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">Esc</kbd><span class="kbd-label">deselect</span></div>
+  <div class="kbd-group">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3e3e4a" stroke-width="1.7" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    <span class="kbd-label">drag pill to change level</span>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Good to go? Approve to write the spec.</p>

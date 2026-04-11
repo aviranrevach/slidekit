@@ -1,0 +1,293 @@
+<h2>Element Selection — v3</h2>
+<p class="subtitle">Label on container marker · Bigger scrubber · Quick tasks dropdown</p>
+
+<style>
+  .demo-shell {
+    background: #08090d; border-radius: 10px; overflow: visible;
+    border: 1px solid rgba(255,255,255,0.07);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    position: relative;
+  }
+  .demo-topbar {
+    background: #0d0e12; border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 38px; padding: 0 14px; display: flex; align-items: center;
+    font-size: 11px; color: #52535e; border-radius: 10px 10px 0 0;
+  }
+  .demo-canvas {
+    padding: 32px 56px 40px 40px; position: relative;
+    background: #08090d; border-radius: 0 0 10px 10px;
+  }
+  .demo-frame {
+    background: linear-gradient(135deg, #0a0a0f 0%, #0f1020 100%);
+    border-radius: 8px; padding: 44px 52px;
+    position: relative; border: 1.5px solid rgba(94,106,210,0.2);
+  }
+  .demo-eyebrow { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7c6af7; margin-bottom: 14px; }
+  .demo-h1 { font-size: 32px; font-weight: 700; color: #e8e8f0; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 16px; }
+  .demo-h1 em { color: #7c6af7; font-style: italic; }
+  .demo-body { font-size: 13px; color: #6b6b8a; line-height: 1.65; max-width: 400px; }
+
+  /* ── Selection outline with label badge ── */
+  .el-wrap { position: relative; display: block; width: 100%; }
+
+  /* Label badge — top-left corner of selection outline */
+  .el-label {
+    position: absolute;
+    top: -10px; left: -2px;
+    background: #5e6ad2; color: white;
+    font-size: 9px; font-weight: 600; font-family: monospace;
+    padding: 1px 6px; border-radius: 4px;
+    z-index: 10; line-height: 1.6;
+  }
+
+  .el-selected { outline: 2px solid #5e6ad2; outline-offset: 5px; border-radius: 3px; }
+  .el-parent { outline: 1.5px dashed rgba(94,106,210,0.4); outline-offset: 14px; border-radius: 6px; }
+
+  /* ── Toolbar — centered above, always ── */
+  .sel-toolbar {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%; transform: translateX(-50%);
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 4px;
+    display: flex; align-items: center; gap: 2px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+    white-space: nowrap; z-index: 20;
+  }
+  .stb {
+    display: flex; align-items: center; gap: 5px;
+    background: transparent; border: none; color: #8a8a9a;
+    border-radius: 5px; padding: 5px 10px; font-size: 11px;
+    cursor: pointer; font-family: inherit;
+  }
+  .stb:hover { background: rgba(255,255,255,0.06); color: #e8e8ec; }
+  .stb.accent { color: #8c94e0; }
+  .stb.accent:hover { background: rgba(94,106,210,0.12); color: #a5b4fc; }
+  .stb-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+
+  /* ── Quick tasks dropdown ── */
+  .quick-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #0d0e12; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 4px; width: 200px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+    z-index: 30;
+  }
+  .qt-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #3e3e4a; padding: 4px 8px 6px; }
+  .qt-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 10px; font-size: 11px; color: #8a8a9a;
+    border-radius: 5px; cursor: pointer;
+  }
+  .qt-item:hover { background: rgba(255,255,255,0.05); color: #e8e8ec; }
+  .qt-item svg { flex-shrink: 0; color: #52535e; }
+  .qt-item:hover svg { color: #8c94e0; }
+
+  /* ── Side rail layer control ── */
+  .layer-rail {
+    position: absolute;
+    right: -40px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: center;
+    background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px; padding: 6px 5px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    cursor: ns-resize; width: 28px; z-index: 10;
+    gap: 2px;
+  }
+  .lr-btn {
+    color: #52535e; display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 5px;
+    background: none; border: none; padding: 0; cursor: pointer; flex-shrink: 0;
+  }
+  .lr-btn:hover:not(:disabled) { color: #e8e8ec; background: rgba(255,255,255,0.06); }
+  .lr-btn:disabled { color: #2a2a38; cursor: default; }
+  .lr-dots {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 4px 0; align-items: center;
+  }
+  .lr-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.12); cursor: pointer;
+    transition: all 0.12s;
+  }
+  .lr-dot.active {
+    background: #5e6ad2;
+    width: 12px; height: 12px;
+    box-shadow: 0 0 0 3px rgba(94,106,210,0.2);
+  }
+  .lr-dot:hover:not(.active) { background: rgba(94,106,210,0.4); }
+
+  /* drag hint */
+  .lr-drag-hint {
+    font-size: 7px; color: #2e2e3a; text-align: center;
+    margin-top: 2px; line-height: 1.4; width: 100%;
+  }
+
+  .section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; font-weight: 600; margin-bottom: 10px; }
+
+  /* kbd hints */
+  .kbd-row { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .kbd-group { display: flex; align-items: center; gap: 5px; }
+  .kbd { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px 6px; font-size: 9px; color: #52535e; font-family: monospace; }
+  .kbd-label { font-size: 10px; color: #3e3e4a; }
+</style>
+
+<!-- State 1: h1 selected, quick tasks open -->
+<div style="margin-bottom: 40px;">
+  <div class="section-label">Element selected — h1 · Quick tasks open</div>
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-canvas">
+      <div class="demo-frame">
+        <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+
+        <div class="el-wrap" style="margin-bottom: 16px;">
+
+          <!-- Label badge top-left of selection -->
+          <span class="el-label">h1</span>
+
+          <!-- Toolbar above — centered -->
+          <div class="sel-toolbar">
+            <button class="stb accent">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Talk to Claude
+            </button>
+            <div class="stb-sep"></div>
+            <button class="stb">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modify
+            </button>
+            <div class="stb-sep"></div>
+            <!-- Quick tasks button — active/open state -->
+            <button class="stb" style="background:rgba(255,255,255,0.06);color:#e8e8ec;position:relative;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              Quick tasks
+
+              <!-- Dropdown -->
+              <div class="quick-dropdown">
+                <div class="qt-label">Apply to selected element</div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                  Make more visual
+                </div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
+                  Simplify the text
+                </div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                  Make bolder / more contrast
+                </div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="m5 3 14 9-14 9V3z"/></svg>
+                  Add animation
+                </div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                  Restyle this element
+                </div>
+                <div class="qt-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg>
+                  Explore alternatives
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Selected element -->
+          <div class="demo-h1 el-selected">
+            From <em>Hierarchy</em><br>to Intelligence
+          </div>
+
+          <!-- Side rail — at deepest level, down arrow disabled -->
+          <div class="layer-rail">
+            <button class="lr-btn">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <div class="lr-dots">
+              <div class="lr-dot" title="body > div.frame"></div>
+              <div class="lr-dot" title="section.content"></div>
+              <div class="lr-dot active" title="h1"></div>
+            </div>
+            <button class="lr-btn" disabled>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="lr-drag-hint">drag</div>
+          </div>
+        </div>
+
+        <div class="demo-body">
+          A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- State 2: parent selected -->
+<div style="margin-bottom: 28px;">
+  <div class="section-label">Scrubbed up — div.hero-section selected · up arrow now disabled</div>
+  <div class="demo-shell">
+    <div class="demo-topbar">from-hierarchy-to-intelligence &nbsp;·&nbsp; frame 1</div>
+    <div class="demo-canvas">
+      <div class="demo-frame">
+        <div class="el-wrap">
+          <span class="el-label" style="top:-16px;">div.hero-section</span>
+
+          <div class="sel-toolbar">
+            <button class="stb accent">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Talk to Claude
+            </button>
+            <div class="stb-sep"></div>
+            <button class="stb">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modify
+            </button>
+            <div class="stb-sep"></div>
+            <button class="stb">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              Quick tasks
+            </button>
+          </div>
+
+          <div class="el-parent">
+            <div class="demo-eyebrow">Block · Jack Dorsey · March 2026</div>
+            <div class="demo-h1">From <em>Hierarchy</em><br>to Intelligence</div>
+            <div class="demo-body" style="margin-top:14px;">
+              A visual breakdown of Block's radical org redesign — and what it means if you work in a product organization.
+            </div>
+          </div>
+
+          <!-- Rail — at topmost level, up disabled -->
+          <div class="layer-rail">
+            <button class="lr-btn" disabled>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <div class="lr-dots">
+              <div class="lr-dot active" title="div.hero-section"></div>
+              <div class="lr-dot" title="section.content"></div>
+              <div class="lr-dot" title="h1"></div>
+            </div>
+            <button class="lr-btn">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="lr-drag-hint">drag</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="kbd-row">
+  <div class="kbd-group"><kbd class="kbd">Tab</kbd><span class="kbd-label">next sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">⇧ Tab</kbd><span class="kbd-label">prev sibling</span></div>
+  <div class="kbd-group"><kbd class="kbd">Esc</kbd><span class="kbd-label">deselect</span></div>
+  <div class="kbd-group">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3e3e4a" stroke-width="1.7" stroke-linecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    <span class="kbd-label">drag rail to change level</span>
+  </div>
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Does this look right? Approve to write the spec.</p>
