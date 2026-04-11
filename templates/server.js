@@ -11,6 +11,9 @@ const TEMPLATES   = path.join(__dirname);
 
 const PRESENTATION_JSON = path.join(PROJECT_DIR, 'presentation.json');
 const SELECTION_JSON    = path.join(PROJECT_DIR, 'selection.json');
+const CONTEXT_JSON      = path.join(PROJECT_DIR, 'context.json');
+const SHARED_CSS        = path.join(PROJECT_DIR, 'shared.css');
+const SHARED_JS         = path.join(PROJECT_DIR, 'shared.js');
 const EDITOR_HTML       = path.join(TEMPLATES, 'editor.html');
 
 const sseClients = new Set();
@@ -96,6 +99,65 @@ const server = http.createServer((req, res) => {
     res.write('data: connected\n\n');
     sseClients.add(res);
     req.on('close', () => sseClients.delete(res));
+    return;
+  }
+
+  // Serve shared.css
+  if (req.method === 'GET' && req.url === '/shared.css') {
+    cors(res);
+    if (fs.existsSync(SHARED_CSS)) {
+      res.writeHead(200, { 'Content-Type': 'text/css' });
+      res.end(fs.readFileSync(SHARED_CSS, 'utf8'));
+    } else {
+      res.writeHead(404); res.end('');
+    }
+    return;
+  }
+
+  // Serve shared.js
+  if (req.method === 'GET' && req.url === '/shared.js') {
+    cors(res);
+    if (fs.existsSync(SHARED_JS)) {
+      res.writeHead(200, { 'Content-Type': 'application/javascript' });
+      res.end(fs.readFileSync(SHARED_JS, 'utf8'));
+    } else {
+      res.writeHead(404); res.end('');
+    }
+    return;
+  }
+
+  // Serve context.json (read)
+  if (req.method === 'GET' && req.url === '/context.json') {
+    cors(res);
+    try {
+      jsonResponse(res, fs.readFileSync(CONTEXT_JSON, 'utf8'));
+    } catch {
+      jsonResponse(res, {});
+    }
+    return;
+  }
+
+  // Write context.json (POST)
+  if (req.method === 'POST' && req.url === '/context') {
+    req.setEncoding('utf8');
+    const MAX_BODY = 65_536;
+    let body = '';
+    let overflow = false;
+    req.on('data', (chunk) => {
+      if (overflow) return;
+      body += chunk;
+      if (body.length > MAX_BODY) { overflow = true; cors(res); res.writeHead(413); res.end('payload too large'); req.resume(); }
+    });
+    req.on('end', () => {
+      if (overflow) return;
+      try {
+        JSON.parse(body);
+        fs.writeFileSync(CONTEXT_JSON, body);
+        cors(res); res.writeHead(200); res.end();
+      } catch {
+        cors(res); res.writeHead(400); res.end('invalid JSON');
+      }
+    });
     return;
   }
 
