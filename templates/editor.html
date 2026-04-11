@@ -1183,11 +1183,9 @@ function buildFrameToolbar(frameId, frameData) {
   exploreWrapper.appendChild(explorePop);
   tb.appendChild(exploreWrapper);
 
-  // Replay animations (only if frame has entrance-animated elements)
-  const frameEl = document.getElementById(frameId);
-  const hasAnimated = frameEl && (
-    frameEl.querySelector('.t-item, .block-card, .role-card, .mapping-row, [data-anim-in]') !== null
-  );
+  // Replay animations — check rawHTML or data-anim-in presence (toolbar built before DOM)
+  const rawHtml = frameData.rawHTML || '';
+  const hasAnimated = /class="[^"]*\bt-item\b|class="[^"]*\bblock-card\b|class="[^"]*\brole-card\b|class="[^"]*\bmapping-row\b|data-anim-in/.test(rawHtml);
   if (hasAnimated) {
     tb.appendChild(makeBtn(
       `<polygon points="5,3 19,12 5,21"/><path d="M19 3v18"/>`,
@@ -1382,7 +1380,7 @@ function renderEditor(json) {
     ['.mapping-row', 80],
   ];
   STAGGER_SELECTORS.forEach(([sel, gap]) => {
-    root.querySelectorAll(sel).forEach((el, i) => {
+    canvas.querySelectorAll(sel).forEach((el, i) => {
       setTimeout(() => el.classList.add('visible'), i * gap + 200);
     });
   });
