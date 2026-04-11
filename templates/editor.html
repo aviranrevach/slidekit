@@ -236,6 +236,78 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 }
 .explore-skip-btn:hover { color: var(--text-2); }
 
+/* ── Queue panel ── */
+#queue-pill {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--surface-3); border: 1px solid rgba(94,106,210,0.35);
+  border-radius: 20px; padding: 5px 14px 5px 8px;
+  display: none; align-items: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 400;
+}
+#queue-pill.visible { display: inline-flex; }
+.qp-badge { background: var(--accent); color: white; border-radius: 10px; font-size: 10px; font-weight: 700; padding: 1px 7px; min-width: 20px; text-align: center; }
+.qp-divider { width: 1px; height: 12px; background: var(--border-hi); }
+.qp-phrase { font-family: monospace; font-size: 10px; color: #8c94e0; font-weight: 600; }
+
+#queue-panel {
+  position: fixed; bottom: 20px; right: 20px;
+  width: 248px; max-height: calc(100vh - 80px);
+  background: var(--surface-1); border: 1px solid var(--border-hi);
+  border-radius: 10px; display: none; flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 400;
+}
+#queue-panel.visible { display: flex; }
+.qpanel-header {
+  padding: 10px 12px 9px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+}
+.qpanel-title { font-size: 11px; font-weight: 600; color: var(--text-1); flex: 1; }
+.qpanel-count { background: var(--accent); color: white; border-radius: 8px; font-size: 9px; font-weight: 700; padding: 1px 7px; }
+.qpanel-collapse { color: var(--text-4); font-size: 14px; cursor: pointer; line-height: 1; background: none; border: none; padding: 0 2px; }
+.qpanel-collapse:hover { color: var(--text-2); }
+.qpanel-items { flex: 1; overflow-y: auto; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+.qpanel-items::-webkit-scrollbar { width: 3px; }
+.qpanel-items::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+.qi {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 7px; padding: 7px 9px;
+}
+.qi-top { display: flex; align-items: flex-start; gap: 6px; }
+.qi-icon { font-size: 10px; flex-shrink: 0; margin-top: 1px; line-height: 1; color: var(--text-3); }
+.qi-icon.ai { color: #8c94e0; }
+.qi-body { flex: 1; min-width: 0; }
+.qi-meta { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+.qi-frame-tag {
+  font-size: 8px; color: var(--text-4); text-transform: uppercase;
+  letter-spacing: 0.08em; background: rgba(255,255,255,0.04);
+  border-radius: 3px; padding: 1px 5px;
+}
+.qi-type-tag { font-size: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.qi-text { font-size: 10px; color: var(--text-2); line-height: 1.45; }
+.qi-del { color: var(--text-4); font-size: 13px; cursor: pointer; flex-shrink: 0; line-height: 1; background: none; border: none; padding: 0 2px; }
+.qi-del:hover { color: #ef4444; }
+.qi-rich {
+  display: flex; align-items: center; gap: 4px; margin-top: 5px;
+  padding: 3px 6px; background: rgba(94,106,210,0.07);
+  border: 1px solid rgba(94,106,210,0.12); border-radius: 4px; width: fit-content;
+}
+.qi-rich-dots { display: flex; gap: 2px; align-items: center; }
+.qi-rich-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+.qi-rich-label { font-size: 8px; color: var(--text-3); letter-spacing: 0.03em; }
+.qpanel-execute {
+  border-top: 1px solid var(--border); padding: 10px 12px 11px; flex-shrink: 0;
+}
+.qpanel-execute-label { font-size: 9px; color: var(--text-4); margin-bottom: 6px; }
+.qpanel-execute-phrase {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.25);
+  border-radius: 6px; padding: 7px 10px; cursor: pointer;
+}
+.qpanel-execute-phrase:hover { background: rgba(94,106,210,0.17); }
+.qpanel-phrase-text { font-family: monospace; font-size: 11px; color: #8c94e0; font-weight: 600; flex: 1; }
+.qpanel-copy-hint { font-size: 8px; color: var(--text-4); }
+.qpanel-empty { padding: 20px 12px; text-align: center; font-size: 11px; color: var(--text-4); }
+
 /* ── Between-frame controls ── */
 .between-frames {
   display: flex; align-items: center; justify-content: center;
@@ -465,6 +537,31 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   </button>
 </div>
 
+<!-- Queue pill (collapsed) -->
+<div id="queue-pill" onclick="expandQueue()">
+  <span class="qp-badge" id="qp-badge-count">0</span>
+  <span class="qp-divider"></span>
+  <span class="qp-phrase">"execute queue"</span>
+</div>
+
+<!-- Queue panel (expanded) -->
+<div id="queue-panel">
+  <div class="qpanel-header">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg>
+    <span class="qpanel-title">Queue</span>
+    <span class="qpanel-count" id="qpanel-count">0</span>
+    <button class="qpanel-collapse" onclick="collapseQueue()">−</button>
+  </div>
+  <div class="qpanel-items" id="qpanel-items"></div>
+  <div class="qpanel-execute">
+    <div class="qpanel-execute-label">Type this in Claude chat to apply all:</div>
+    <div class="qpanel-execute-phrase" id="qpanel-copy-btn" onclick="copyExecutePhrase()">
+      <span class="qpanel-phrase-text">"execute queue"</span>
+      <span class="qpanel-copy-hint" id="qpanel-copy-hint">click to copy</span>
+    </div>
+  </div>
+</div>
+
 <!-- Inline renderer -->
 <script>
 /* ======================================================
@@ -614,6 +711,106 @@ let selectedFrameId = null;
 let selectedElementId = null;
 let panelCollapsed = false;
 let pendingWrites = 0;
+let queueItems = []; // { id, type, frameId, text, context? }
+
+function writeQueue() {
+  try {
+    fetch('/selection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frameId: selectedFrameId, elementId: selectedElementId, queue: queueItems }),
+    });
+  } catch (e) { /* server may not be running */ }
+  renderQueue();
+}
+
+function addToQueue(item) {
+  item.id = 'q-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  queueItems.push(item);
+  writeQueue();
+}
+
+function removeFromQueue(id) {
+  queueItems = queueItems.filter(q => q.id !== id);
+  writeQueue();
+}
+
+let queueExpanded = false;
+
+function renderQueue() {
+  const pill = document.getElementById('queue-pill');
+  const panel = document.getElementById('queue-panel');
+  if (!pill || !panel) return;
+
+  const count = queueItems.length;
+  document.getElementById('qp-badge-count').textContent = count;
+  document.getElementById('qpanel-count').textContent = count;
+
+  if (count === 0) {
+    pill.classList.remove('visible');
+    panel.classList.remove('visible');
+    queueExpanded = false;
+    return;
+  }
+
+  if (queueExpanded) {
+    pill.classList.remove('visible');
+    panel.classList.add('visible');
+  } else {
+    pill.classList.add('visible');
+    panel.classList.remove('visible');
+  }
+
+  const container = document.getElementById('qpanel-items');
+  container.innerHTML = '';
+  queueItems.forEach(item => {
+    const isAI = item.type !== 'note';
+    const div = document.createElement('div');
+    div.className = 'qi';
+    const typeTag = isAI ? `<span class="qi-type-tag">${item.type}</span>` : '';
+    const richIndicator = isAI ? `
+      <div class="qi-rich">
+        <div class="qi-rich-dots">
+          <div class="qi-rich-dot"></div>
+          <div class="qi-rich-dot" style="opacity:0.6"></div>
+          <div class="qi-rich-dot" style="opacity:0.3"></div>
+        </div>
+        <span class="qi-rich-label">includes layout context, neighbors, theme</span>
+      </div>` : '';
+    div.innerHTML = `
+      <div class="qi-top">
+        <span class="qi-icon${isAI ? ' ai' : ''}">${isAI ? '✦' : '✏'}</span>
+        <div class="qi-body">
+          <div class="qi-meta">
+            <span class="qi-frame-tag">${item.frameId}</span>
+            ${typeTag}
+          </div>
+          <div class="qi-text">${item.text}</div>
+          ${richIndicator}
+        </div>
+        <button class="qi-del" data-id="${item.id}">×</button>
+      </div>`;
+    div.querySelector('.qi-del').onclick = (e) => { e.stopPropagation(); removeFromQueue(item.id); };
+    container.appendChild(div);
+  });
+}
+
+function expandQueue() {
+  queueExpanded = true;
+  renderQueue();
+}
+
+function collapseQueue() {
+  queueExpanded = false;
+  renderQueue();
+}
+
+function copyExecutePhrase() {
+  navigator.clipboard.writeText('execute queue').catch(() => {});
+  const hint = document.getElementById('qpanel-copy-hint');
+  hint.textContent = 'copied!';
+  setTimeout(() => { hint.textContent = 'click to copy'; }, 1500);
+}
 
 // ── Frame toolbar ────────────────────────────────────────────────────────────
 
@@ -724,6 +921,36 @@ function buildFrameToolbar(frameId, frameData) {
     'Duplicate frame', '', () => duplicateFrame(frameId)
   ));
 
+  // Add note to queue
+  const noteWrapper = document.createElement('div');
+  noteWrapper.style.cssText = 'position:relative;display:flex;';
+  const noteBtn = document.createElement('button');
+  noteBtn.className = 'ftb';
+  noteBtn.dataset.tip = 'Add note to queue';
+  noteBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const notePop = document.createElement('div');
+  notePop.className = 'explore-popover';
+  notePop.innerHTML = `
+    <div class="explore-popover-label">Add note for this frame</div>
+    <textarea placeholder="e.g. make heading more punchy, add timeline visual…"></textarea>
+    <div class="explore-popover-actions">
+      <button class="explore-skip-btn">Cancel</button>
+      <button class="explore-gen-btn">Add to queue</button>
+    </div>`;
+  noteBtn.onclick = (e) => { e.stopPropagation(); notePop.classList.toggle('open'); };
+  notePop.querySelector('.explore-skip-btn').onclick = (e) => { e.stopPropagation(); notePop.classList.remove('open'); };
+  notePop.querySelector('.explore-gen-btn').onclick = (e) => {
+    e.stopPropagation();
+    const text = notePop.querySelector('textarea').value.trim();
+    if (text) addToQueue({ type: 'note', frameId, text });
+    notePop.querySelector('textarea').value = '';
+    notePop.classList.remove('open');
+  };
+  document.addEventListener('click', () => notePop.classList.remove('open'), { once: true });
+  noteWrapper.appendChild(noteBtn);
+  noteWrapper.appendChild(notePop);
+  tb.appendChild(noteWrapper);
+
   // Explore layouts
   const exploreWrapper = document.createElement('div');
   exploreWrapper.style.cssText = 'position:relative;display:flex;';
@@ -817,6 +1044,25 @@ function dismissVariant(frameId) {
 }
 
 function triggerExplore(frameId, context) {
+  // Add to visible queue with full context
+  const sourceFrame = currentJSON?.frames.find(f => f.id === frameId);
+  const frameIdx = currentJSON?.frames.findIndex(f => f.id === frameId) ?? 0;
+  const neighbors = currentJSON?.frames
+    .slice(Math.max(0, frameIdx - 1), frameIdx + 2)
+    .filter(f => f.id !== frameId)
+    .map(f => f.id) ?? [];
+  addToQueue({
+    type: 'explore',
+    frameId,
+    text: context || 'generate layout variants',
+    context: {
+      sourceFrame,
+      neighbors,
+      theme: currentJSON?.meta?.theme ?? 'dark',
+      userContext: context,
+    },
+  });
+  // Also write action to selection.json for immediate processing
   const sel = { frameId, action: 'explore', context, status: 'pending' };
   fetch('/selection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sel) });
   // Show waiting indicator immediately in the DOM
@@ -871,9 +1117,17 @@ function deleteFrame(frameId) {
 // ── Fetch + render ──────────────────────────────────────────────────────────
 
 async function loadAndRender() {
-  const res = await fetch('/presentation.json');
-  currentJSON = await res.json();
+  const [presRes, selRes] = await Promise.all([
+    fetch('/presentation.json'),
+    fetch('/selection.json').catch(() => null),
+  ]);
+  currentJSON = await presRes.json();
+  if (selRes?.ok) {
+    const sel = await selRes.json();
+    if (Array.isArray(sel.queue)) queueItems = sel.queue;
+  }
   renderEditor(currentJSON);
+  renderQueue();
 }
 
 function renderEditor(json) {
@@ -955,6 +1209,7 @@ function renderEditor(json) {
 
   syncThemePicker();
   applyCanvasMode();
+  renderQueue();
 }
 
 // ── Selection ───────────────────────────────────────────────────────────────
