@@ -534,6 +534,22 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 .theme-dark .present-frame { background: #0f172a; color: #e2e8f0; }
 .theme-light .present-frame { background: #ffffff; color: #0f172a; }
 
+/* ── Grid mode ── */
+#canvas.grid-mode {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 24px;
+  align-items: start;
+  overflow-y: auto;
+}
+#canvas.grid-mode .frame-wrapper { margin-bottom: 0; }
+#canvas.grid-mode .frame-toolbar { display: none; }
+#canvas.grid-mode .between-frames { display: none; }
+#canvas.grid-mode .present-frame { cursor: pointer; margin-bottom: 0; }
+#canvas.grid-mode .present-frame:hover { border-color: rgba(94,106,210,0.4); }
+#canvas.grid-mode .present-frame.grid-active { border-color: var(--accent); border-width: 2px; }
+
 /* ── Frame mode ── */
 #canvas.frame-mode {
   padding: 24px;
@@ -564,6 +580,24 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 #frame-mode-nav button:hover { color: var(--text-1); }
 #frame-mode-nav .nav-label { font-size: 11px; color: var(--text-3); min-width: 60px; text-align: center; }
 
+/* ── Settings panel ── */
+#settings-wrap { position: relative; }
+#settings-panel {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--surface-1); border: 1px solid var(--border-hi);
+  border-radius: 8px; padding: 12px 14px; width: 210px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 500;
+  display: none; flex-direction: column; gap: 10px;
+  white-space: nowrap;
+}
+#settings-panel.open { display: flex; }
+.sp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sp-label { font-size: 11px; color: var(--text-2); }
+.sp-seg { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 5px; padding: 2px; display: flex; }
+.sp-opt { font-size: 10px; color: var(--text-3); border: none; background: transparent; padding: 3px 9px; border-radius: 3px; cursor: pointer; font-family: inherit; }
+.sp-opt.active { background: var(--surface-3); color: var(--text-1); font-weight: 600; }
+.sp-sep { height: 1px; background: var(--border); }
+
 /* ── Segmented control ── */
 .canvas-mode-toggle {
   display: flex;
@@ -590,27 +624,55 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 <!-- Top bar -->
 <div id="topbar">
   <span class="title" id="pres-title">Loading...</span>
-  <select id="theme-picker" onchange="setTheme(this.value)" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;">
-    <option value="dark">Dark</option>
-    <option value="light">Light</option>
-  </select>
+
+  <!-- View toggle — centered absolutely -->
   <div class="canvas-mode-toggle">
-    <button class="cmt-opt active" id="mode-scroll" onclick="setCanvasMode('scroll')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
-      Scroll
-    </button>
-    <button class="cmt-opt" id="mode-frame" onclick="setCanvasMode('frame')">
+    <button class="cmt-opt" id="mode-slide" onclick="setCanvasMode('slide')">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      Frame
+      Slide
+    </button>
+    <button class="cmt-opt active" id="mode-strip" onclick="setCanvasMode('strip')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+      Strip
+    </button>
+    <button class="cmt-opt" id="mode-grid" onclick="setCanvasMode('grid')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Grid
     </button>
   </div>
+
+  <!-- Right group -->
+  <div id="settings-wrap">
+    <button id="settings-btn" onclick="toggleSettings()" style="background:transparent;border:1px solid var(--border-hi);color:var(--text-2);border-radius:5px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;height:28px;font-family:inherit;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Settings
+    </button>
+    <div id="settings-panel">
+      <div class="sp-row">
+        <span class="sp-label">Navigation</span>
+        <div class="sp-seg">
+          <button class="sp-opt active" id="sp-nav-scroll" onclick="setSettingNav('scroll')">Scroll</button>
+          <button class="sp-opt" id="sp-nav-slides" onclick="setSettingNav('slides')">Slides</button>
+        </div>
+      </div>
+      <div class="sp-sep"></div>
+      <div class="sp-row">
+        <span class="sp-label">Aspect ratio</span>
+        <div class="sp-seg">
+          <button class="sp-opt active" id="sp-ar-169" onclick="setSettingAspect('16/9')">16:9</button>
+          <button class="sp-opt" id="sp-ar-free" onclick="setSettingAspect('free')">Free</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <button class="primary" onclick="openPreview()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
     Preview
   </button>
-  <button onclick="exportHTML()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Export
+
+  <button onclick="exportHTML()" title="Export HTML" style="background:transparent;border:none;color:var(--text-2);cursor:pointer;padding:5px 7px;border-radius:5px;display:inline-flex;align-items:center;height:28px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
   </button>
 </div>
 
@@ -1006,6 +1068,49 @@ function expandQueue() {
 function collapseQueue() {
   queueExpanded = false;
   renderQueue();
+}
+
+function toggleSettings() {
+  const panel = document.getElementById('settings-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    syncSettingsPanel();
+    setTimeout(() => {
+      document.addEventListener('click', closeSettingsOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeSettingsOnOutside(e) {
+  const wrap = document.getElementById('settings-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('settings-panel').classList.remove('open');
+  }
+}
+
+function syncSettingsPanel() {
+  const nav = currentJSON?.meta?.navigation || 'scroll';
+  const ar  = currentJSON?.meta?.aspectRatio || '16/9';
+  document.getElementById('sp-nav-scroll').classList.toggle('active', nav !== 'slides');
+  document.getElementById('sp-nav-slides').classList.toggle('active', nav === 'slides');
+  document.getElementById('sp-ar-169').classList.toggle('active', ar === '16/9');
+  document.getElementById('sp-ar-free').classList.toggle('active', ar === 'free');
+}
+
+function setSettingNav(value) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  json.meta.navigation = value;
+  writeJSON(json);
+  syncSettingsPanel();
+}
+
+function setSettingAspect(value) {
+  if (!currentJSON) return;
+  const json = JSON.parse(JSON.stringify(currentJSON));
+  json.meta.aspectRatio = value;
+  writeJSON(json);
+  syncSettingsPanel();
 }
 
 function copyExecutePhrase() {
@@ -2502,29 +2607,63 @@ function exportHTML() {
 
 // ── Canvas mode ──────────────────────────────────────────────────────────────
 
-let canvasMode = localStorage.getItem('presentCanvasMode') || 'scroll';
+// Migrate old mode names to new
+let _savedMode = localStorage.getItem('presentCanvasMode') || 'strip';
+if (_savedMode === 'scroll') _savedMode = 'strip';
+if (_savedMode === 'frame') _savedMode = 'slide';
+let canvasMode = _savedMode;
 let frameModeIndex = 0;
 
 function setCanvasMode(mode) {
   canvasMode = mode;
   localStorage.setItem('presentCanvasMode', mode);
-  document.getElementById('mode-scroll').classList.toggle('active', mode === 'scroll');
-  document.getElementById('mode-frame').classList.toggle('active', mode === 'frame');
+  document.querySelectorAll('.cmt-opt').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('mode-' + mode);
+  if (btn) btn.classList.add('active');
   applyCanvasMode();
 }
 
 function applyCanvasMode() {
   const canvas = document.getElementById('canvas');
   const nav = document.getElementById('frame-mode-nav');
-  if (canvasMode === 'frame') {
+  canvas.classList.remove('frame-mode', 'grid-mode');
+  nav.classList.remove('visible');
+  canvas.querySelectorAll('.frame-wrapper').forEach(w => w.classList.remove('frame-active-mode'));
+
+  if (canvasMode === 'slide') {
     canvas.classList.add('frame-mode');
     nav.classList.add('visible');
     showFrameAtIndex(frameModeIndex);
-  } else {
-    canvas.classList.remove('frame-mode');
-    nav.classList.remove('visible');
-    canvas.querySelectorAll('.frame-wrapper').forEach(w => w.classList.remove('frame-active-mode'));
+  } else if (canvasMode === 'grid') {
+    canvas.classList.add('grid-mode');
+    initGridMode();
   }
+  // strip: default scroll, no extra class needed
+}
+
+function initGridMode() {
+  const canvas = document.getElementById('canvas');
+  const frames = Array.from(canvas.querySelectorAll('.present-frame'));
+  frames.forEach(f => {
+    f.classList.toggle('grid-active', f.id === selectedFrameId);
+    const containerW = canvas.offsetWidth / 3 - 32;
+    const frameW = f.scrollWidth || f.offsetWidth || 860;
+    const scale = Math.min(1, containerW / frameW);
+    f.style.transform = scale < 1 ? `scale(${scale})` : '';
+    f.style.transformOrigin = 'top left';
+    if (scale < 1) {
+      f.style.width = (100 / scale) + '%';
+      const wrapper2 = f.parentElement;
+      if (wrapper2) wrapper2.style.height = (f.offsetHeight * scale) + 'px';
+    }
+  });
+  frames.forEach((f, i) => {
+    f.onclick = (e) => {
+      e.stopPropagation();
+      frameModeIndex = i;
+      setCanvasMode('slide');
+    };
+  });
 }
 
 function showFrameAtIndex(idx) {
@@ -2551,8 +2690,9 @@ function nextFrame() { showFrameAtIndex(frameModeIndex + 1); }
 // ── Init ─────────────────────────────────────────────────────────────────────
 
 // Sync canvas mode toggle buttons with saved state
-document.getElementById('mode-scroll').classList.toggle('active', canvasMode === 'scroll');
-document.getElementById('mode-frame').classList.toggle('active', canvasMode === 'frame');
+document.querySelectorAll('.cmt-opt').forEach(b => b.classList.remove('active'));
+const _initModeBtn = document.getElementById('mode-' + canvasMode);
+if (_initModeBtn) _initModeBtn.classList.add('active');
 loadAndRender();
 connectSSE();
 </script>
