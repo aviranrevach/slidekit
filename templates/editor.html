@@ -94,6 +94,102 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 .tc-card { background: rgba(255,255,255,0.06); border-radius: 2px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
 .thumb-raw-shimmer { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%); }
 
+/* ── DOM element selection ── */
+.dom-el-hover { outline: 1px dashed rgba(94,106,210,0.35); outline-offset: 3px; border-radius: 2px; cursor: pointer; }
+.dom-el-selected { outline: 2px solid #5e6ad2; outline-offset: 5px; border-radius: 3px; }
+
+.dom-el-label {
+  position: fixed;
+  background: #5e6ad2; color: white;
+  font-size: 9px; font-weight: 600; font-family: monospace;
+  padding: 1px 6px; border-radius: 4px; z-index: 1000; line-height: 1.6;
+  pointer-events: none;
+}
+
+.dom-toolbar-wrap {
+  position: fixed;
+  background: #1e1f28; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 9px; box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+  overflow: visible; z-index: 1000; pointer-events: all;
+}
+.dom-toolbar-header {
+  font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #52535e; font-weight: 600; padding: 4px 10px 2px; text-align: center;
+}
+.dom-toolbar-buttons { display: flex; align-items: center; gap: 1px; padding: 3px; }
+.dtb {
+  display: flex; align-items: center; gap: 4px;
+  background: transparent; border: none; color: #c4c4d4;
+  border-radius: 5px; padding: 5px 8px; font-size: 11px;
+  cursor: pointer; font-family: inherit; font-weight: 500;
+  position: relative;
+}
+.dtb:hover { background: rgba(255,255,255,0.07); color: #f0f0f8; }
+.dtb.accent { color: #a5aff5; }
+.dtb.accent:hover { background: rgba(94,106,210,0.14); color: #bec8ff; }
+.dtb svg { color: inherit; }
+.dtb-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.07); margin: 0 2px; }
+.dtb-chev { color: rgba(255,255,255,0.25); }
+
+.dom-dropdown {
+  position: absolute; top: calc(100% + 5px); left: 0;
+  background: #13141a; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 4px; min-width: 190px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.7); z-index: 1100;
+  display: none;
+}
+.dom-dropdown.open { display: block; }
+.dd-title { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.1em; color: #3e3e4a; font-weight: 600; padding: 4px 10px 5px; }
+.dd-sep { height: 1px; background: rgba(255,255,255,0.05); margin: 3px 4px; }
+.dd-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; font-size: 11px; color: #a0a0b4;
+  border-radius: 5px; cursor: pointer;
+}
+.dd-item:hover { background: rgba(255,255,255,0.05); color: #e8e8ec; }
+.dd-item.danger { color: #8a6060; }
+.dd-item.danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
+
+.dom-scrubber {
+  position: fixed;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; z-index: 1000; pointer-events: all;
+}
+.ds-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.12); cursor: pointer; transition: background 0.1s; }
+.ds-dot:hover { background: rgba(94,106,210,0.5); }
+.ds-pill {
+  background: #5e6ad2; border-radius: 10px;
+  width: 16px; height: 24px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2.5px; cursor: ns-resize;
+  box-shadow: 0 0 0 2px rgba(94,106,210,0.2), 0 2px 6px rgba(0,0,0,0.5);
+}
+.ds-stripe { width: 7px; height: 1.5px; border-radius: 1px; background: rgba(255,255,255,0.55); }
+
+.dom-custom-pop {
+  position: absolute; top: calc(100% + 6px); left: 0;
+  background: #13141a; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 8px; width: 220px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.7); z-index: 1100;
+  display: none; flex-direction: column; gap: 6px;
+}
+.dom-custom-pop.open { display: flex; }
+.dom-custom-pop textarea {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px;
+  color: var(--text-2); font-size: 11px; padding: 6px 8px; resize: none;
+  font-family: inherit; outline: none; height: 52px; line-height: 1.5;
+}
+.dom-custom-pop textarea:focus { border-color: var(--accent); }
+.dom-custom-pop-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.dom-custom-submit {
+  background: var(--accent); border: none; color: white;
+  border-radius: 5px; padding: 4px 12px; font-size: 11px; cursor: pointer; font-weight: 500;
+}
+.dom-custom-cancel {
+  background: transparent; border: 1px solid var(--border-hi);
+  color: var(--text-3); border-radius: 5px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+}
+
 /* ── Minimal scrollbars ── */
 #canvas::-webkit-scrollbar, #frame-list::-webkit-scrollbar { width: 4px; }
 #canvas::-webkit-scrollbar-track, #frame-list::-webkit-scrollbar-track { background: transparent; }
@@ -726,6 +822,7 @@ let selectedFrameId = null;
 let selectedElementId = null;
 let panelCollapsed = false;
 let pendingWrites = 0;
+let selectedDomEl = null; // currently selected DOM element (for element-level selection)
 let queueItems = []; // { id, type, frameId, text, context? }
 
 function writeQueue() {
@@ -1084,6 +1181,7 @@ function renderEditor(json) {
   const { meta = {}, frames = [] } = json;
   document.title = meta.title || 'Present';
   document.getElementById('pres-title').textContent = meta.title || 'Untitled';
+  deselectDomElement(); // clear DOM selection on each re-render
 
   // Canvas
   const canvas = document.getElementById('canvas');
@@ -1148,6 +1246,7 @@ function renderEditor(json) {
   syncThemePicker();
   applyCanvasMode();
   renderQueue();
+  initElementSelection();
 }
 
 // ── Selection ───────────────────────────────────────────────────────────────
@@ -1227,6 +1326,348 @@ function setFrameView(mode) {
   const list = document.getElementById('frame-list');
   list.classList.toggle('list-view', mode === 'list');
   if (currentJSON) renderFrameStrip(currentJSON.frames);
+}
+
+// ── DOM Element Selection ────────────────────────────────────────────────────
+
+function getDomSelector(el) {
+  const frame = el.closest('.present-frame');
+  if (!frame || el === frame) return '';
+  const parts = [];
+  let cur = el;
+  while (cur && cur !== frame) {
+    let seg = cur.tagName.toLowerCase();
+    if (cur.className && typeof cur.className === 'string') {
+      const cls = cur.className.trim().split(/\s+/).filter(c =>
+        !c.startsWith('dom-el') && !c.startsWith('el-selected') && c.length < 20
+      )[0];
+      if (cls) seg += '.' + cls;
+    }
+    parts.unshift(seg);
+    cur = cur.parentElement;
+  }
+  return parts.join(' > ');
+}
+
+function buildElementContext(el, frameId) {
+  return {
+    tag: el.tagName.toLowerCase(),
+    selector: getDomSelector(el),
+    textSnippet: (el.textContent || '').trim().slice(0, 80),
+    frameId,
+  };
+}
+
+function buildDomToolbar(el, frameId) {
+  const ctx = buildElementContext(el, frameId);
+  const wrap = document.createElement('div');
+  wrap.className = 'dom-toolbar-wrap';
+  wrap.id = 'dom-toolbar';
+
+  const header = document.createElement('div');
+  header.className = 'dom-toolbar-header';
+  header.textContent = 'Tell Claude to';
+  wrap.appendChild(header);
+
+  const buttons = document.createElement('div');
+  buttons.className = 'dom-toolbar-buttons';
+
+  function makeDtb(svgPath, label, cls) {
+    const btn = document.createElement('button');
+    btn.className = 'dtb' + (cls ? ' ' + cls : '');
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${svgPath}</svg>${label ? '<span>' + label + '</span>' : ''}`;
+    return btn;
+  }
+
+  function makeSep() {
+    const s = document.createElement('div');
+    s.className = 'dtb-sep';
+    return s;
+  }
+
+  function makeDropdown(titleText, items) {
+    const dd = document.createElement('div');
+    dd.className = 'dom-dropdown';
+    const title = document.createElement('div');
+    title.className = 'dd-title';
+    title.textContent = titleText;
+    dd.appendChild(title);
+    items.forEach(item => {
+      if (item === 'sep') {
+        const s = document.createElement('div');
+        s.className = 'dd-sep';
+        dd.appendChild(s);
+        return;
+      }
+      const row = document.createElement('div');
+      row.className = 'dd-item' + (item.danger ? ' danger' : '');
+      row.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>${item.label}`;
+      row.onclick = (e) => {
+        e.stopPropagation();
+        item.action(ctx);
+        dd.classList.remove('open');
+      };
+      dd.appendChild(row);
+    });
+    return dd;
+  }
+
+  function makeDropdownBtn(svgPath, label, dropdown) {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;display:flex;';
+    const btn = makeDtb(svgPath, label);
+    const chev = document.createElement('span');
+    chev.className = 'dtb-chev';
+    chev.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+    btn.appendChild(chev);
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.dom-dropdown.open').forEach(d => d.classList.remove('open'));
+      dropdown.classList.toggle('open');
+    };
+    wrapper.appendChild(btn);
+    wrapper.appendChild(dropdown);
+    return wrapper;
+  }
+
+  function queueAction(text, context) {
+    addToQueue({ type: 'note', frameId, elementContext: context, text });
+  }
+
+  // Content dropdown
+  const contentDD = makeDropdown('Modify content', [
+    { icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', label: 'Rewrite this text', action: c => queueAction('Rewrite this text', c) },
+    { icon: '<path d="M4 6h16M4 12h10M4 18h6"/>', label: 'Simplify / shorten', action: c => queueAction('Simplify and shorten this text', c) },
+    { icon: '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>', label: 'Make it more punchy', action: c => queueAction('Make this text more punchy and direct', c) },
+    'sep',
+    { icon: '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>', label: 'Hide this element', action: c => queueAction('Hide this element', c) },
+    { icon: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>', label: 'Show all elements', action: c => queueAction('Show all hidden elements in this frame', c) },
+    'sep',
+    { icon: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', label: 'Remove this element', danger: true, action: c => queueAction('Remove this element', c) },
+  ]);
+  buttons.appendChild(makeDropdownBtn(
+    '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+    'Content', contentDD
+  ));
+
+  // Design dropdown
+  const designDD = makeDropdown('Modify design', [
+    { icon: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.55 0 1-.45 1-1v-1.5c0-.55-.45-1-1-1-.55 0-1-.45-1-1 0-.55.45-1 1-1h1.5c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/><circle cx="6.5" cy="11.5" r="1.5"/><circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="11.5" r="1.5"/>', label: 'Restyle this element', action: c => queueAction('Restyle this element', c) },
+    { icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', label: 'Make bolder / more contrast', action: c => queueAction('Make this element bolder with more visual contrast', c) },
+    { icon: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>', label: 'Make more visual', action: c => queueAction('Make this element more visual', c) },
+    { icon: '<path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/>', label: 'Explore design variants', action: c => queueAction('Explore design variants for this element', c) },
+  ]);
+  buttons.appendChild(makeDropdownBtn(
+    '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.55 0 1-.45 1-1v-1.5c0-.55-.45-1-1-1-.55 0-1-.45-1-1 0-.55.45-1 1-1h1.5c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/><circle cx="6.5" cy="11.5" r="1.5"/><circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="11.5" r="1.5"/>',
+    'Design', designDD
+  ));
+
+  // Behaviour dropdown
+  const behaviourDD = makeDropdown('Modify behaviour', [
+    { icon: '<path d="m5 3 14 9-14 9V3z"/>', label: 'Add animation', action: c => queueAction('Add an animation to this element', c) },
+    { icon: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', label: 'Change animation timing', action: c => queueAction('Change the animation timing for this element', c) },
+    { icon: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>', label: 'Remove animation', action: c => queueAction('Remove the animation from this element', c) },
+  ]);
+  buttons.appendChild(makeDropdownBtn(
+    '<path d="m5 3 14 9-14 9V3z"/>',
+    'Behaviour', behaviourDD
+  ));
+
+  buttons.appendChild(makeSep());
+
+  // Custom task (pushpin, with popover)
+  const customWrap = document.createElement('div');
+  customWrap.style.cssText = 'position:relative;display:flex;';
+  const customBtn = makeDtb('<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76z"/>', 'Custom');
+  const customPop = document.createElement('div');
+  customPop.className = 'dom-custom-pop';
+  customPop.innerHTML = `
+    <textarea placeholder="Describe what you want Claude to do\u2026"></textarea>
+    <div class="dom-custom-pop-actions">
+      <button class="dom-custom-cancel">Cancel</button>
+      <button class="dom-custom-submit">Add to queue</button>
+    </div>`;
+  customPop.querySelector('.dom-custom-cancel').onclick = (e) => { e.stopPropagation(); customPop.classList.remove('open'); };
+  customPop.querySelector('.dom-custom-submit').onclick = (e) => {
+    e.stopPropagation();
+    const text = customPop.querySelector('textarea').value.trim();
+    if (text) addToQueue({ type: 'note', frameId, elementContext: ctx, text });
+    customPop.querySelector('textarea').value = '';
+    customPop.classList.remove('open');
+  };
+  customBtn.onclick = (e) => { e.stopPropagation(); document.querySelectorAll('.dom-dropdown.open').forEach(d => d.classList.remove('open')); customPop.classList.toggle('open'); };
+  customWrap.appendChild(customBtn);
+  customWrap.appendChild(customPop);
+  buttons.appendChild(customWrap);
+
+  buttons.appendChild(makeSep());
+
+  // Chat about this
+  const chatBtn = makeDtb('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', 'Chat about this', 'accent');
+  chatBtn.onclick = (e) => {
+    e.stopPropagation();
+    postSelection({ frameId, elementId: null, elementContext: ctx, queue: queueItems });
+  };
+  buttons.appendChild(chatBtn);
+
+  wrap.appendChild(buttons);
+  return wrap;
+}
+
+function buildDomScrubber(el) {
+  const frame = el.closest('.present-frame');
+  if (!frame) return null;
+
+  const ancestors = [];
+  let cur = el.parentElement;
+  while (cur && cur !== frame && ancestors.length < 3) {
+    ancestors.unshift(cur);
+    cur = cur.parentElement;
+  }
+
+  const firstChild = el.children.length > 0 ? el.children[0] : null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'dom-scrubber';
+  wrap.id = 'dom-scrubber';
+
+  ancestors.forEach(ancestor => {
+    const dot = document.createElement('div');
+    dot.className = 'ds-dot';
+    dot.title = ancestor.tagName.toLowerCase();
+    dot.onclick = (e) => { e.stopPropagation(); selectDomElement(ancestor, frame.id); };
+    wrap.appendChild(dot);
+  });
+
+  const pill = document.createElement('div');
+  pill.className = 'ds-pill';
+  for (let i = 0; i < 3; i++) {
+    const stripe = document.createElement('div');
+    stripe.className = 'ds-stripe';
+    pill.appendChild(stripe);
+  }
+
+  let dragStartY = 0;
+  let dragging = false;
+  pill.addEventListener('mousedown', (e) => { e.stopPropagation(); dragging = true; dragStartY = e.clientY; });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const delta = e.clientY - dragStartY;
+    if (Math.abs(delta) > 20) {
+      dragging = false;
+      if (delta < 0 && ancestors.length > 0) selectDomElement(ancestors[ancestors.length - 1], frame.id);
+      else if (delta > 0 && firstChild) selectDomElement(firstChild, frame.id);
+    }
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+
+  wrap.appendChild(pill);
+
+  if (firstChild) {
+    const dot = document.createElement('div');
+    dot.className = 'ds-dot';
+    dot.title = firstChild.tagName.toLowerCase();
+    dot.onclick = (e) => { e.stopPropagation(); selectDomElement(firstChild, frame.id); };
+    wrap.appendChild(dot);
+  }
+
+  return wrap;
+}
+
+function deselectDomElement() {
+  if (selectedDomEl) {
+    selectedDomEl.classList.remove('dom-el-selected');
+    selectedDomEl = null;
+  }
+  document.getElementById('dom-toolbar')?.remove();
+  document.getElementById('dom-scrubber')?.remove();
+  document.getElementById('dom-el-label')?.remove();
+}
+
+function selectDomElement(el, frameId) {
+  deselectDomElement();
+  if (el.classList.contains('present-frame') || el.closest('#dom-toolbar') || el.closest('#dom-scrubber')) return;
+
+  selectedDomEl = el;
+  el.classList.add('dom-el-selected');
+
+  const rect = el.getBoundingClientRect();
+
+  const label = document.createElement('div');
+  label.className = 'dom-el-label';
+  label.id = 'dom-el-label';
+  const tag = el.tagName.toLowerCase();
+  const firstCls = typeof el.className === 'string' && el.className.trim()
+    ? el.className.trim().split(/\s+/).filter(c => !c.startsWith('dom-el'))[0]
+    : '';
+  label.textContent = tag + (firstCls ? '.' + firstCls : '');
+  label.style.top = (rect.top - 22) + 'px';
+  label.style.left = rect.left + 'px';
+  document.body.appendChild(label);
+
+  const toolbar = buildDomToolbar(el, frameId);
+  document.body.appendChild(toolbar);
+  // Position after append so offsetWidth is known
+  requestAnimationFrame(() => {
+    const tbW = toolbar.offsetWidth;
+    const tbH = toolbar.offsetHeight;
+    toolbar.style.left = Math.max(8, rect.left + rect.width / 2 - tbW / 2) + 'px';
+    toolbar.style.top = (rect.top - tbH - 14) + 'px';
+  });
+
+  const scrubber = buildDomScrubber(el);
+  if (scrubber) {
+    document.body.appendChild(scrubber);
+    requestAnimationFrame(() => {
+      scrubber.style.left = (rect.right + 10) + 'px';
+      scrubber.style.top = (rect.top + rect.height / 2 - scrubber.offsetHeight / 2) + 'px';
+    });
+  }
+
+  const ctx = buildElementContext(el, frameId);
+  postSelection({ frameId, elementId: null, elementContext: ctx, queue: queueItems });
+}
+
+function initElementSelection() {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  canvas.addEventListener('mouseover', (e) => {
+    const el = e.target;
+    if (el === canvas || el.classList.contains('present-frame') || el.classList.contains('frame-wrapper')) return;
+    if (el.closest('#dom-toolbar') || el.closest('#dom-scrubber') || el.closest('.frame-toolbar')) return;
+    if (!el.closest('.present-frame')) return;
+    if (el === selectedDomEl) return;
+    el.classList.add('dom-el-hover');
+  });
+  canvas.addEventListener('mouseout', (e) => {
+    e.target.classList.remove('dom-el-hover');
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const el = e.target;
+    if (el === canvas || el.classList.contains('frame-wrapper')) { deselectDomElement(); return; }
+    if (el.closest('#dom-toolbar') || el.closest('#dom-scrubber')) return;
+    const frame = el.closest('.present-frame');
+    if (!frame) { deselectDomElement(); return; }
+    if (el === frame || el.classList.contains('present-frame')) { deselectDomElement(); return; }
+    if (el.dataset.elementId || el.closest('[data-element-id]')) return;
+    e.stopPropagation();
+    selectDomElement(el, frame.id);
+  }, true);
+
+  document.addEventListener('keydown', (e) => {
+    if (!selectedDomEl) return;
+    if (e.key === 'Escape') { deselectDomElement(); return; }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const sibling = e.shiftKey ? selectedDomEl.previousElementSibling : selectedDomEl.nextElementSibling;
+      if (sibling) {
+        const frame = selectedDomEl.closest('.present-frame');
+        if (frame) selectDomElement(sibling, frame.id);
+      }
+    }
+  });
 }
 
 function extractRawHeading(rawHTML) {
