@@ -3,20 +3,14 @@
 
 const crypto = require('crypto');
 
-// Accept rawHTML as JSON via stdin or argv[2]
-let frameJson;
+// Accept rawHTML as JSON via argv[2] or stdin
 if (process.argv[2]) {
-  frameJson = JSON.parse(process.argv[2]);
+  run(JSON.parse(process.argv[2]));
 } else {
   const chunks = [];
   process.stdin.on('data', c => chunks.push(c));
-  process.stdin.on('end', () => {
-    frameJson = JSON.parse(Buffer.concat(chunks).toString());
-    run(frameJson);
-  });
-  return;
+  process.stdin.on('end', () => run(JSON.parse(Buffer.concat(chunks).toString())));
 }
-run(frameJson);
 
 function run(frameJson) {
   const rawHTML = frameJson.rawHTML || '';
