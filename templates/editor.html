@@ -989,60 +989,6 @@ function buildFrameToolbar(frameId, frameData) {
   return tb;
 }
 
-function buildExploreGroup(sourceFrameId, variants, json) {
-  const group = document.createElement('div');
-  group.className = 'explore-group';
-  const header = document.createElement('div');
-  header.className = 'explore-group-header';
-  header.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg> ${variants.length} explore variant${variants.length !== 1 ? 's' : ''}`;
-  group.appendChild(header);
-  variants.forEach((variant, i) => {
-    const item = document.createElement('div');
-    item.className = 'explore-variant-item';
-    const variantRoot = PresentRenderer.renderPresentation({ ...json, frames: [variant] });
-    const variantFrameEl = variantRoot.querySelector('.present-frame');
-    if (variantFrameEl) {
-      const wrap = document.createElement('div');
-      wrap.className = 'explore-variant-frame-wrap';
-      wrap.appendChild(variantFrameEl);
-      const badge = document.createElement('div');
-      badge.className = 'explore-variant-badge';
-      badge.textContent = `Option ${i + 1}`;
-      item.appendChild(badge);
-      item.appendChild(wrap);
-    }
-    const actions = document.createElement('div');
-    actions.className = 'explore-variant-actions';
-    const keepBtn = document.createElement('button');
-    keepBtn.className = 'explore-keep-btn';
-    keepBtn.textContent = '+ Add to deck';
-    keepBtn.onclick = (e) => { e.stopPropagation(); keepVariant(variant.id); };
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'explore-dismiss-btn';
-    dismissBtn.textContent = 'Dismiss';
-    dismissBtn.onclick = (e) => { e.stopPropagation(); dismissVariant(variant.id); };
-    actions.appendChild(keepBtn);
-    actions.appendChild(dismissBtn);
-    item.appendChild(actions);
-    group.appendChild(item);
-  });
-  return group;
-}
-
-function keepVariant(frameId) {
-  const json = JSON.parse(JSON.stringify(currentJSON));
-  const frame = json.frames.find(f => f.id === frameId);
-  if (!frame) return;
-  delete frame.explore;
-  writeJSON(json);
-}
-
-function dismissVariant(frameId) {
-  const json = JSON.parse(JSON.stringify(currentJSON));
-  json.frames = json.frames.filter(f => f.id !== frameId);
-  writeJSON(json);
-}
-
 function triggerExplore(frameId, context) {
   // Add to visible queue with full context
   const sourceFrame = currentJSON?.frames.find(f => f.id === frameId);
@@ -1062,20 +1008,9 @@ function triggerExplore(frameId, context) {
       userContext: context,
     },
   });
-  // Also write action to selection.json for immediate processing
+  // Write action to selection.json for Claude to pick up
   const sel = { frameId, action: 'explore', context, status: 'pending' };
   fetch('/selection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sel) });
-  // Show waiting indicator immediately in the DOM
-  const frameEl = document.getElementById(frameId);
-  if (!frameEl) return;
-  const wrapper = frameEl.closest('.frame-wrapper');
-  if (!wrapper) return;
-  const existing = wrapper.nextElementSibling;
-  if (existing?.classList.contains('explore-group')) existing.remove();
-  const waiting = document.createElement('div');
-  waiting.className = 'explore-group';
-  waiting.innerHTML = `<div class="explore-group-header"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/></svg> Explore variants</div><div class="explore-waiting" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;align-items:center;gap:8px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Ready to generate</span></div><div style="font-size:10px;color:var(--text-4);line-height:1.6;"><strong style="color:var(--text-3);">→ Go to your Claude chat</strong> and type <strong style="color:var(--accent);">"explore"</strong> or <strong style="color:var(--accent);">"explore frame [N]"</strong>. Claude will generate 3–5 layout variants and they'll appear here automatically.</div></div>`;
-  wrapper.insertAdjacentElement('afterend', waiting);
 }
 
 function toggleFrameHidden(frameId) {
@@ -1135,21 +1070,16 @@ function renderEditor(json) {
   document.title = meta.title || 'Present';
   document.getElementById('pres-title').textContent = meta.title || 'Untitled';
 
-  // Split explore variants from normal frames
-  const exploreVariants = frames.filter(f => f.explore?.source);
-  const normalFrames = frames.filter(f => !f.explore?.source);
-
-  // Canvas — render only normal frames
+  // Canvas
   const canvas = document.getElementById('canvas');
   canvas.innerHTML = '';
-  const normalJSON = { ...json, frames: normalFrames };
-  const root = PresentRenderer.renderPresentation(normalJSON);
+  const root = PresentRenderer.renderPresentation(json);
 
   // Wrap each frame in a .frame-wrapper and inject toolbar
   const frameEls = Array.from(root.querySelectorAll('.present-frame'));
   frameEls.forEach((frameEl) => {
     const frameId = frameEl.id;
-    const frameData = normalFrames.find(f => f.id === frameId);
+    const frameData = frames.find(f => f.id === frameId);
     if (!frameData) return;
 
     // Apply hidden/locked visual states
@@ -1165,18 +1095,11 @@ function renderEditor(json) {
     wrapper.appendChild(frameEl);
   });
 
-  // Inject between-frame controls + explore groups after each wrapper
+  // Inject between-frame controls after each wrapper
   Array.from(root.querySelectorAll('.frame-wrapper')).forEach((wrapper) => {
     const frameId = wrapper.querySelector('.present-frame')?.id;
     if (!frameId) return;
-    const variants = exploreVariants.filter(f => f.explore.source === frameId);
-    if (variants.length > 0) {
-      const group = buildExploreGroup(frameId, variants, json);
-      wrapper.insertAdjacentElement('afterend', group);
-      group.insertAdjacentElement('afterend', buildBetweenControls(frameId));
-    } else {
-      wrapper.insertAdjacentElement('afterend', buildBetweenControls(frameId));
-    }
+    wrapper.insertAdjacentElement('afterend', buildBetweenControls(frameId));
   });
 
   // Wire element click -> selection
