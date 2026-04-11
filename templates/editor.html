@@ -418,6 +418,15 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 .qpanel-phrase-text { font-family: monospace; font-size: 11px; color: #8c94e0; font-weight: 600; flex: 1; }
 .qpanel-copy-hint { font-size: 8px; color: var(--text-4); }
 .qpanel-empty { padding: 20px 12px; text-align: center; font-size: 11px; color: var(--text-4); }
+.qi.executed { opacity: 0.5; }
+.qi-executed-badge { font-size: 8px; color: #4ade80; font-weight: 600; margin-left: 4px; }
+.qpanel-clear-executed {
+  display: none; width: 100%; border: none; background: transparent;
+  color: var(--text-4); font-size: 10px; cursor: pointer; padding: 5px 8px 4px;
+  border-top: 1px solid var(--border); text-align: center; font-family: inherit;
+}
+.qpanel-clear-executed:hover { color: var(--text-2); background: var(--surface-2); }
+.qpanel-clear-executed.visible { display: block; }
 
 /* ── Between-frame controls ── */
 .between-frames {
@@ -652,7 +661,7 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 <div id="queue-pill" onclick="expandQueue()">
   <span class="qp-badge" id="qp-badge-count">0</span>
   <span class="qp-divider"></span>
-  <span class="qp-phrase">"execute queue"</span>
+  <span class="qp-phrase">slideit</span>
 </div>
 
 <!-- Queue panel (expanded) -->
@@ -667,10 +676,11 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   <div class="qpanel-execute">
     <div class="qpanel-execute-label">Type this in Claude chat to apply all:</div>
     <div class="qpanel-execute-phrase" id="qpanel-copy-btn" onclick="copyExecutePhrase()">
-      <span class="qpanel-phrase-text">"execute queue"</span>
+      <span class="qpanel-phrase-text">slideit</span>
       <span class="qpanel-copy-hint" id="qpanel-copy-hint">click to copy</span>
     </div>
   </div>
+  <button class="qpanel-clear-executed" id="qpanel-clear-executed" onclick="clearExecutedItems()">Clear executed items</button>
 </div>
 
 <!-- Inline renderer -->
@@ -854,9 +864,12 @@ function renderQueue() {
   const panel = document.getElementById('queue-panel');
   if (!pill || !panel) return;
 
+  const pendingCount = queueItems.filter(q => q.status !== 'executed').length;
+  const executedCount = queueItems.filter(q => q.status === 'executed').length;
   const count = queueItems.length;
-  document.getElementById('qp-badge-count').textContent = count;
-  document.getElementById('qpanel-count').textContent = count;
+
+  document.getElementById('qp-badge-count').textContent = pendingCount || count;
+  document.getElementById('qpanel-count').textContent = pendingCount || count;
 
   if (count === 0) {
     pill.classList.remove('visible');
@@ -873,14 +886,20 @@ function renderQueue() {
     panel.classList.remove('visible');
   }
 
+  // Show/hide clear executed button
+  const clearBtn = document.getElementById('qpanel-clear-executed');
+  if (clearBtn) clearBtn.classList.toggle('visible', executedCount > 0);
+
   const container = document.getElementById('qpanel-items');
   container.innerHTML = '';
   queueItems.forEach(item => {
     const isAI = item.type !== 'note';
+    const isExecuted = item.status === 'executed';
     const div = document.createElement('div');
-    div.className = 'qi';
+    div.className = 'qi' + (isExecuted ? ' executed' : '');
     const typeTag = isAI ? `<span class="qi-type-tag">${item.type}</span>` : '';
-    const richIndicator = isAI ? `
+    const executedBadge = isExecuted ? `<span class="qi-executed-badge">✓ Executed</span>` : '';
+    const richIndicator = isAI && !isExecuted ? `
       <div class="qi-rich">
         <div class="qi-rich-dots">
           <div class="qi-rich-dot"></div>
@@ -896,6 +915,7 @@ function renderQueue() {
           <div class="qi-meta">
             <span class="qi-frame-tag">${item.frameId}</span>
             ${typeTag}
+            ${executedBadge}
           </div>
           <div class="qi-text">${item.text}</div>
           ${richIndicator}
@@ -918,10 +938,15 @@ function collapseQueue() {
 }
 
 function copyExecutePhrase() {
-  navigator.clipboard.writeText('execute queue').catch(() => {});
+  navigator.clipboard.writeText('slideit').catch(() => {});
   const hint = document.getElementById('qpanel-copy-hint');
   hint.textContent = 'copied!';
   setTimeout(() => { hint.textContent = 'click to copy'; }, 1500);
+}
+
+function clearExecutedItems() {
+  queueItems = queueItems.filter(q => q.status !== 'executed');
+  writeQueue();
 }
 
 // ── Frame toolbar ────────────────────────────────────────────────────────────
