@@ -1,0 +1,235 @@
+<h2>Thumbnail Design — 152px Panel, Content Preview</h2>
+<p class="subtitle">Simplified JSON-driven rendering. Each thumbnail shows: background, heading text, layout hint, frame number. Click to approve.</p>
+
+<style>
+  .panel-mock {
+    background: rgba(8,9,13,0.96);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    width: 152px;
+  }
+  .panel-header {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .ph-icons { display: flex; gap: 3px; }
+  .ph-icon { width: 14px; height: 14px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+  .ph-x { width: 10px; height: 10px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+  .panel-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 500px; }
+  .panel-list::-webkit-scrollbar { width: 3px; }
+  .panel-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .thumb {
+    width: 136px; aspect-ratio: 16/9;
+    border-radius: 4px; cursor: pointer; position: relative;
+    overflow: hidden; border: 1.5px solid rgba(255,255,255,0.06);
+    flex-shrink: 0; transition: border-color 0.15s;
+  }
+  .thumb.active { border-color: #5e6ad2; box-shadow: 0 0 0 2px rgba(94,106,210,0.2); }
+  .thumb:hover { border-color: #5e6ad2; }
+
+  /* Thumbnail content layers */
+  .thumb-bg { position: absolute; inset: 0; }
+  .thumb-body {
+    position: relative; z-index: 1;
+    padding: 7px 9px; height: 100%;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 3px; overflow: hidden;
+  }
+  .thumb-eyebrow {
+    font-size: 5.5px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(94,106,210,0.9); font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .thumb-heading {
+    font-size: 10px; font-weight: 700; line-height: 1.25;
+    color: rgba(255,255,255,0.92); letter-spacing: -0.02em;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .thumb-body-lines { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+  .thumb-line {
+    height: 3px; border-radius: 2px; background: rgba(255,255,255,0.14);
+  }
+  .thumb-layout-tag {
+    position: absolute; top: 4px; right: 5px; z-index: 2;
+    font-size: 5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.3);
+    padding: 1px 4px; border-radius: 2px;
+  }
+  .thumb-num {
+    position: absolute; bottom: 3px; left: 5px; z-index: 2;
+    font-size: 7px; color: rgba(255,255,255,0.3);
+  }
+
+  /* Layout hints: two-col shows a divider */
+  .thumb-two-col {
+    display: grid; grid-template-columns: 1fr 1fr; height: 100%;
+    position: relative; z-index: 1;
+  }
+  .tc-col {
+    padding: 7px 6px; display: flex; flex-direction: column; gap: 3px; overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .tc-col:last-child { border-right: none; }
+
+  /* Cards hint */
+  .thumb-cards {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+    padding: 5px; height: 100%; position: relative; z-index: 1;
+  }
+  .tc-card {
+    background: rgba(255,255,255,0.06); border-radius: 2px;
+    padding: 4px; display: flex; flex-direction: column; gap: 2px;
+  }
+
+  /* Raw layout — just shows a gradient shimmer */
+  .thumb-raw-shimmer {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%);
+  }
+
+  .annotation {
+    background: rgba(94,106,210,0.08); border: 1px solid rgba(94,106,210,0.2);
+    border-radius: 6px; padding: 8px 12px; font-size: 10px; color: #8a8a9a;
+    line-height: 1.6; margin-top: 0;
+  }
+  .annotation strong { color: #e8e8ec; }
+  .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #5e6ad2; font-weight: 600; margin-bottom: 8px; }
+</style>
+
+<div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;">
+
+  <!-- Panel mockup -->
+  <div class="card" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:transparent;">
+      <div class="panel-mock">
+        <div class="panel-header">
+          <div class="ph-icons"><div class="ph-icon"></div><div class="ph-icon"></div></div>
+          <div class="ph-x"></div>
+        </div>
+        <div class="panel-list">
+
+          <!-- Frame 1: hero / raw — heading + eyebrow -->
+          <div class="thumb active">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#0f1020,#0a0c1a);"></div>
+            <div class="thumb-body">
+              <div class="thumb-eyebrow">Block · March 2026</div>
+              <div class="thumb-heading">From Hierarchy to Intelligence</div>
+            </div>
+            <span class="thumb-num">1</span>
+          </div>
+
+          <!-- Frame 2: text — heading + body lines -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#0a1628,#0d1f3a);"></div>
+            <div class="thumb-body">
+              <div class="thumb-heading">Hierarchy was always a hack</div>
+              <div class="thumb-body-lines">
+                <div class="thumb-line" style="width:80%"></div>
+                <div class="thumb-line" style="width:65%"></div>
+                <div class="thumb-line" style="width:72%"></div>
+              </div>
+            </div>
+            <div class="thumb-layout-tag">text</div>
+            <span class="thumb-num">2</span>
+          </div>
+
+          <!-- Frame 3: two-col -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:#0d0e12;"></div>
+            <div class="thumb-two-col">
+              <div class="tc-col">
+                <div class="thumb-heading" style="font-size:7px;">Roman Army</div>
+                <div class="thumb-body-lines"><div class="thumb-line" style="width:90%"></div><div class="thumb-line" style="width:70%"></div></div>
+              </div>
+              <div class="tc-col">
+                <div class="thumb-heading" style="font-size:7px;">Block 2025</div>
+                <div class="thumb-body-lines"><div class="thumb-line" style="width:80%"></div><div class="thumb-line" style="width:60%"></div></div>
+              </div>
+            </div>
+            <div class="thumb-layout-tag">two-col</div>
+            <span class="thumb-num">3</span>
+          </div>
+
+          <!-- Frame 4: cards -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#0f1117,#1a1a2e);"></div>
+            <div class="thumb-cards">
+              <div class="tc-card"><div class="thumb-line" style="width:90%"></div><div class="thumb-line" style="width:70%"></div></div>
+              <div class="tc-card"><div class="thumb-line" style="width:80%"></div><div class="thumb-line" style="width:65%"></div></div>
+              <div class="tc-card"><div class="thumb-line" style="width:85%"></div><div class="thumb-line" style="width:60%"></div></div>
+              <div class="tc-card"><div class="thumb-line" style="width:75%"></div><div class="thumb-line" style="width:70%"></div></div>
+            </div>
+            <div class="thumb-layout-tag">cards</div>
+            <span class="thumb-num">4</span>
+          </div>
+
+          <!-- Frame 5: raw — gradient with shimmer -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#7c6af7 0%,#0a0c1a 60%);opacity:0.8;"></div>
+            <div class="thumb-raw-shimmer"></div>
+            <div class="thumb-body">
+              <div class="thumb-heading">What Changes Now</div>
+            </div>
+            <div class="thumb-layout-tag">raw</div>
+            <span class="thumb-num">5</span>
+          </div>
+
+          <!-- Frame 6 -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#0d0e12,#1a1a2e);"></div>
+            <div class="thumb-body">
+              <div class="thumb-heading">The New Playbook</div>
+              <div class="thumb-body-lines"><div class="thumb-line" style="width:75%"></div><div class="thumb-line" style="width:55%"></div></div>
+            </div>
+            <span class="thumb-num">6</span>
+          </div>
+
+          <!-- Frame 7 -->
+          <div class="thumb">
+            <div class="thumb-bg" style="background:linear-gradient(135deg,#0f1020,#16213e);"></div>
+            <div class="thumb-body">
+              <div class="thumb-eyebrow">Conclusion</div>
+              <div class="thumb-heading">Start Building</div>
+            </div>
+            <span class="thumb-num">7</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Approve this design</h3>
+      <p>152px panel, 136px thumbnails. Click to select.</p>
+    </div>
+  </div>
+
+  <!-- Annotation -->
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="section-title">What each thumbnail shows</div>
+    <div class="annotation">
+      <strong>All thumbnails:</strong> background (color/gradient from JSON), frame number (bottom-left)<br><br>
+      <strong>hero / raw:</strong> eyebrow label (if present) + heading text<br><br>
+      <strong>text:</strong> heading + 3 placeholder body lines (shows density)<br><br>
+      <strong>two-col:</strong> left/right column split with mini headings<br><br>
+      <strong>cards:</strong> 2×2 card grid with line placeholders<br><br>
+      <strong>raw:</strong> gradient background + shimmer + heading (no DOM rendering)
+    </div>
+
+    <div class="section-title" style="margin-top:4px;">What changes in code</div>
+    <div class="annotation">
+      <strong>Panel width:</strong> 104px → 152px<br>
+      <strong>Thumbnail width:</strong> 88px → 136px (inside 8px padding)<br>
+      <strong>renderFrameStrip():</strong> reads frame JSON, picks the right thumbnail template per layout type<br>
+      <strong>No DOM scaling</strong> — pure CSS, no iframes
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Does this look right? Click the panel to approve and I'll write the spec.</p>

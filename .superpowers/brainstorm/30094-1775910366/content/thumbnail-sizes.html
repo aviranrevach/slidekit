@@ -1,0 +1,216 @@
+<h2>Thumbnail Size Comparison</h2>
+<p class="subtitle">Current thumbnails are 104px wide with only background color shown. Figma Slides uses ~160px wide with actual slide content rendered inside. Which width feels right?</p>
+
+<style>
+  .panel-row { display: flex; gap: 24px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+
+  .panel-mock {
+    background: rgba(8,9,13,0.96);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .panel-header-icons { display: flex; gap: 4px; }
+  .ph-icon { width: 14px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .ph-x { width: 10px; height: 10px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+  .panel-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+
+  /* Thumbnail variants */
+  .thumb {
+    aspect-ratio: 16/9;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .thumb.active { border-color: #5e6ad2; box-shadow: 0 0 0 2px rgba(94,106,210,0.2); }
+  .thumb-num {
+    position: absolute; bottom: 3px; left: 5px;
+    font-size: 7px; color: rgba(255,255,255,0.35);
+  }
+
+  /* Slide content inside thumbnail */
+  .thumb-content {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 8px 10px;
+    overflow: hidden;
+  }
+  .tc-label { font-size: 6px; color: rgba(94,106,210,0.8); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+  .tc-h1 { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.9); line-height: 1.2; letter-spacing: -0.02em; }
+  .tc-body { font-size: 5px; color: rgba(255,255,255,0.4); line-height: 1.4; margin-top: 3px; }
+  .tc-dots { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+  .tc-dot-line { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.12); }
+
+  .size-label {
+    font-size: 10px; color: #5e6ad2; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    text-align: center; margin-top: 10px;
+  }
+  .size-sub { font-size: 10px; color: #52535e; text-align: center; margin-top: 3px; }
+
+  /* Slide backgrounds */
+  .bg-1 { background: linear-gradient(135deg, #0f1020, #0a0c1a); }
+  .bg-2 { background: linear-gradient(135deg, #0a1628, #0d1f3a); }
+  .bg-3 { background: linear-gradient(135deg, #13141a, #1e1f28); }
+  .bg-4 { background: linear-gradient(135deg, #0d0e12, #161720); }
+</style>
+
+<div class="panel-row">
+
+  <!-- Current: 104px -->
+  <div class="card" data-choice="104" onclick="toggleSelect(this)" style="cursor:pointer;">
+    <div class="card-image" style="padding:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;">
+      <div class="panel-mock" style="width:104px;">
+        <div class="panel-header">
+          <div class="panel-header-icons"><div class="ph-icon"></div><div class="ph-icon"></div></div>
+          <div class="ph-x"></div>
+        </div>
+        <div class="panel-list">
+          <div class="thumb active bg-1" style="width:88px;">
+            <div class="thumb-content">
+              <div class="tc-label">Part 1</div>
+              <div class="tc-h1">Hierarchy was always a hack</div>
+            </div>
+            <span class="thumb-num">1</span>
+          </div>
+          <div class="thumb bg-2" style="width:88px;">
+            <div class="thumb-content">
+              <div class="tc-h1">The 2,000-Year Problem</div>
+              <div class="tc-dots"><div class="tc-dot-line" style="width:70%;"></div><div class="tc-dot-line" style="width:50%;"></div><div class="tc-dot-line" style="width:60%;"></div></div>
+            </div>
+            <span class="thumb-num">2</span>
+          </div>
+          <div class="thumb bg-3" style="width:88px;">
+            <div class="thumb-content">
+              <div class="tc-h1">What AI Changes</div>
+              <div class="tc-body">Coordination without hierarchy</div>
+            </div>
+            <span class="thumb-num">3</span>
+          </div>
+          <div class="thumb bg-4" style="width:88px;">
+            <div class="thumb-content">
+              <div class="tc-dots"><div class="tc-dot-line" style="width:80%;"></div><div class="tc-dot-line" style="width:55%;"></div></div>
+            </div>
+            <span class="thumb-num">4</span>
+          </div>
+          <div class="thumb bg-1" style="width:88px;">
+            <div class="thumb-content">
+              <div class="tc-h1">Block's Bet</div>
+            </div>
+            <span class="thumb-num">5</span>
+          </div>
+        </div>
+      </div>
+      <div class="size-label">Current — 104px</div>
+      <div class="size-sub">Tight, compact</div>
+    </div>
+  </div>
+
+  <!-- Medium: 152px -->
+  <div class="card" data-choice="152" onclick="toggleSelect(this)" style="cursor:pointer;">
+    <div class="card-image" style="padding:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;">
+      <div class="panel-mock" style="width:152px;">
+        <div class="panel-header">
+          <div class="panel-header-icons"><div class="ph-icon"></div><div class="ph-icon"></div></div>
+          <div class="ph-x"></div>
+        </div>
+        <div class="panel-list">
+          <div class="thumb active bg-1" style="width:136px;">
+            <div class="thumb-content" style="padding:10px 12px;">
+              <div class="tc-label">Part 1</div>
+              <div class="tc-h1" style="font-size:12px;">Hierarchy was always a hack</div>
+              <div class="tc-body" style="font-size:6px;">information routing</div>
+            </div>
+            <span class="thumb-num" style="font-size:8px;">1</span>
+          </div>
+          <div class="thumb bg-2" style="width:136px;">
+            <div class="thumb-content" style="padding:10px 12px;">
+              <div class="tc-h1" style="font-size:12px;">The 2,000-Year Problem</div>
+              <div class="tc-dots" style="margin-top:5px;"><div class="tc-dot-line" style="width:70%;height:4px;"></div><div class="tc-dot-line" style="width:50%;height:4px;"></div><div class="tc-dot-line" style="width:62%;height:4px;"></div></div>
+            </div>
+            <span class="thumb-num" style="font-size:8px;">2</span>
+          </div>
+          <div class="thumb bg-3" style="width:136px;">
+            <div class="thumb-content" style="padding:10px 12px;">
+              <div class="tc-h1" style="font-size:12px;">What AI Changes</div>
+              <div class="tc-body" style="font-size:7px;margin-top:4px;">Coordination without hierarchy</div>
+            </div>
+            <span class="thumb-num" style="font-size:8px;">3</span>
+          </div>
+          <div class="thumb bg-4" style="width:136px;">
+            <div class="thumb-content" style="padding:10px 12px;">
+              <div class="tc-dots"><div class="tc-dot-line" style="width:80%;height:4px;"></div><div class="tc-dot-line" style="width:55%;height:4px;"></div><div class="tc-dot-line" style="width:70%;height:4px;"></div></div>
+            </div>
+            <span class="thumb-num" style="font-size:8px;">4</span>
+          </div>
+          <div class="thumb bg-1" style="width:136px;">
+            <div class="thumb-content" style="padding:10px 12px;">
+              <div class="tc-h1" style="font-size:12px;">Block's Bet</div>
+            </div>
+            <span class="thumb-num" style="font-size:8px;">5</span>
+          </div>
+        </div>
+      </div>
+      <div class="size-label">Medium — 152px ★</div>
+      <div class="size-sub">Figma-like, content readable</div>
+    </div>
+  </div>
+
+  <!-- Large: 192px -->
+  <div class="card" data-choice="192" onclick="toggleSelect(this)" style="cursor:pointer;">
+    <div class="card-image" style="padding:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:0;">
+      <div class="panel-mock" style="width:192px;">
+        <div class="panel-header">
+          <div class="panel-header-icons"><div class="ph-icon"></div><div class="ph-icon"></div></div>
+          <div class="ph-x"></div>
+        </div>
+        <div class="panel-list">
+          <div class="thumb active bg-1" style="width:176px;">
+            <div class="thumb-content" style="padding:12px 14px;">
+              <div class="tc-label" style="font-size:7px;">Part 1</div>
+              <div class="tc-h1" style="font-size:15px;">Hierarchy was always a hack</div>
+              <div class="tc-body" style="font-size:8px;margin-top:5px;">information routing · 2,000 years</div>
+            </div>
+            <span class="thumb-num" style="font-size:9px;">1</span>
+          </div>
+          <div class="thumb bg-2" style="width:176px;">
+            <div class="thumb-content" style="padding:12px 14px;">
+              <div class="tc-h1" style="font-size:15px;">The 2,000-Year Problem</div>
+              <div class="tc-dots" style="margin-top:6px;"><div class="tc-dot-line" style="width:70%;height:5px;"></div><div class="tc-dot-line" style="width:50%;height:5px;"></div><div class="tc-dot-line" style="width:62%;height:5px;"></div></div>
+            </div>
+            <span class="thumb-num" style="font-size:9px;">2</span>
+          </div>
+          <div class="thumb bg-3" style="width:176px;">
+            <div class="thumb-content" style="padding:12px 14px;">
+              <div class="tc-h1" style="font-size:15px;">What AI Changes</div>
+              <div class="tc-body" style="font-size:8px;margin-top:5px;">Coordination without hierarchy</div>
+            </div>
+            <span class="thumb-num" style="font-size:9px;">3</span>
+          </div>
+        </div>
+      </div>
+      <div class="size-label">Large — 192px</div>
+      <div class="size-sub">Very readable, fewer visible</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="text-align:center;margin-top:20px;">Click a panel to select. Note: these show simplified content — actual thumbnails would render the real frame. ★ = my recommendation</p>
