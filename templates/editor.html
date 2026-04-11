@@ -211,11 +211,11 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 
 .present-frame {
   width: 100%; position: relative; overflow: hidden; border-radius: 10px;
-  border: 2px solid transparent; transition: border-color 0.15s; cursor: default;
+  border: 1px solid rgba(255,255,255,0.07); transition: border-color 0.15s, border-width 0.15s; cursor: default;
   margin-bottom: 16px;
 }
-.present-frame:hover { border-color: rgba(94,106,210,0.25); }
-.present-frame.frame-selected { border-color: var(--accent); }
+.present-frame:hover { border-color: rgba(94,106,210,0.35); }
+.present-frame.frame-selected { border-color: var(--accent); border-width: 2px; }
 
 /* ── Frame toolbar — overlays top of frame, no dead space ── */
 .frame-wrapper { position: relative; margin-bottom: 16px; }
