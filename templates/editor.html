@@ -52,7 +52,7 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
   position: absolute; left: 12px;
   top: 50%; transform: translateY(-50%);
   max-height: calc(100% - 24px);
-  width: 104px; background: rgba(8,9,13,0.96); border: 1px solid var(--border);
+  width: 152px; background: rgba(8,9,13,0.96); border: 1px solid var(--border);
   border-radius: 10px; z-index: 50; display: flex; flex-direction: column;
   overflow: hidden; backdrop-filter: blur(8px);
 }
@@ -78,6 +78,21 @@ body { background: var(--bg); color: var(--text-1); font-family: -apple-system, 
 .frame-thumb:hover { border-color: var(--accent); }
 .frame-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(94,106,210,0.2); }
 .frame-thumb-num { position: absolute; bottom: 2px; left: 4px; font-size: 7px; color: var(--text-3); }
+
+/* ── Thumbnail content ── */
+.thumb-bg { position: absolute; inset: 0; }
+.thumb-body { position: relative; z-index: 1; padding: 7px 9px; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 3px; overflow: hidden; }
+.thumb-eyebrow { font-size: 5.5px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(94,106,210,0.9); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thumb-heading { font-size: 10px; font-weight: 700; line-height: 1.25; color: rgba(255,255,255,0.92); letter-spacing: -0.02em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.thumb-body-lines { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.thumb-line { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.14); }
+.thumb-layout-tag { position: absolute; top: 4px; right: 5px; z-index: 2; font-size: 5px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.3); padding: 1px 4px; border-radius: 2px; }
+.thumb-two-col { display: grid; grid-template-columns: 1fr 1fr; height: 100%; position: relative; z-index: 1; }
+.tc-col { padding: 7px 6px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; border-right: 1px solid rgba(255,255,255,0.06); }
+.tc-col:last-child { border-right: none; }
+.thumb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 5px; height: 100%; position: relative; z-index: 1; }
+.tc-card { background: rgba(255,255,255,0.06); border-radius: 2px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+.thumb-raw-shimmer { position: absolute; inset: 0; z-index: 1; background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%); }
 
 /* ── Minimal scrollbars ── */
 #canvas::-webkit-scrollbar, #frame-list::-webkit-scrollbar { width: 4px; }
@@ -1220,6 +1235,30 @@ function getFrameTitle(frame) {
   return frame.layout || 'frame';
 }
 
+function getThumbHeading(frame) {
+  if (!frame.elements) return '';
+  const el = frame.elements.find(e => e.type === 'heading');
+  return el?.content || '';
+}
+
+function getThumbEyebrow(frame) {
+  if (!frame.elements) return '';
+  const el = frame.elements.find(e => e.type === 'subheading');
+  return el?.content || '';
+}
+
+function applyThumbBackground(el, frame) {
+  if (!frame.background) return;
+  const bg = frame.background;
+  if (bg.type === 'color' || bg.type === 'gradient') {
+    el.style.background = bg.value;
+  } else if (bg.type === 'image') {
+    el.style.backgroundImage = `url(${bg.value})`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  }
+}
+
 function renderFrameStrip(frames) {
   const list = document.getElementById('frame-list');
   list.innerHTML = '';
@@ -1231,10 +1270,124 @@ function renderFrameStrip(frames) {
     thumb.dataset.frameId = frame.id;
 
     if (frameViewMode === 'thumb') {
-      if (frame.background) {
-        const bg = frame.background;
-        if (bg.type === 'color' || bg.type === 'gradient') thumb.style.background = bg.value;
+      // Background layer
+      const bgEl = document.createElement('div');
+      bgEl.className = 'thumb-bg';
+      applyThumbBackground(bgEl, frame);
+      thumb.appendChild(bgEl);
+
+      const layout = frame.layout || 'hero';
+      const heading = getThumbHeading(frame);
+      const eyebrow = getThumbEyebrow(frame);
+      const els = frame.elements || [];
+
+      if (layout === 'two-col') {
+        // Two-column grid
+        const grid = document.createElement('div');
+        grid.className = 'thumb-two-col';
+        const mid = Math.ceil(els.length / 2);
+        const leftHeading = els[0]?.content || '';
+        const rightHeading = els[mid]?.content || '';
+        [leftHeading, rightHeading].forEach(h => {
+          const col = document.createElement('div');
+          col.className = 'tc-col';
+          if (h) {
+            const hEl = document.createElement('div');
+            hEl.className = 'thumb-heading';
+            hEl.style.fontSize = '7px';
+            hEl.textContent = h;
+            col.appendChild(hEl);
+          }
+          const lines = document.createElement('div');
+          lines.className = 'thumb-body-lines';
+          [80, 55].forEach(w => {
+            const line = document.createElement('div');
+            line.className = 'thumb-line';
+            line.style.width = w + '%';
+            lines.appendChild(line);
+          });
+          col.appendChild(lines);
+          grid.appendChild(col);
+        });
+        thumb.appendChild(grid);
+        const tag = document.createElement('div');
+        tag.className = 'thumb-layout-tag';
+        tag.textContent = 'two-col';
+        thumb.appendChild(tag);
+
+      } else if (layout === 'cards') {
+        // 2×2 card grid
+        const grid = document.createElement('div');
+        grid.className = 'thumb-cards';
+        for (let c = 0; c < 4; c++) {
+          const card = document.createElement('div');
+          card.className = 'tc-card';
+          [80, 60].forEach(w => {
+            const line = document.createElement('div');
+            line.className = 'thumb-line';
+            line.style.width = w + '%';
+            card.appendChild(line);
+          });
+          grid.appendChild(card);
+        }
+        thumb.appendChild(grid);
+        const tag = document.createElement('div');
+        tag.className = 'thumb-layout-tag';
+        tag.textContent = 'cards';
+        thumb.appendChild(tag);
+
+      } else {
+        // hero / text / image-full / raw / default — body layer
+        if (layout === 'raw') {
+          const shimmer = document.createElement('div');
+          shimmer.className = 'thumb-raw-shimmer';
+          thumb.appendChild(shimmer);
+        }
+        const body = document.createElement('div');
+        body.className = 'thumb-body';
+        if (eyebrow) {
+          const ey = document.createElement('div');
+          ey.className = 'thumb-eyebrow';
+          ey.textContent = eyebrow;
+          body.appendChild(ey);
+        }
+        if (heading) {
+          const h = document.createElement('div');
+          h.className = 'thumb-heading';
+          h.textContent = heading;
+          body.appendChild(h);
+        }
+        if (!heading) {
+          const lines = document.createElement('div');
+          lines.className = 'thumb-body-lines';
+          [75, 55].forEach(w => {
+            const line = document.createElement('div');
+            line.className = 'thumb-line';
+            line.style.width = w + '%';
+            lines.appendChild(line);
+          });
+          body.appendChild(lines);
+        } else if (layout === 'text') {
+          const lines = document.createElement('div');
+          lines.className = 'thumb-body-lines';
+          [80, 65, 72].forEach(w => {
+            const line = document.createElement('div');
+            line.className = 'thumb-line';
+            line.style.width = w + '%';
+            lines.appendChild(line);
+          });
+          body.appendChild(lines);
+        }
+        thumb.appendChild(body);
+        if (layout === 'text' || layout === 'image-full' || layout === 'raw') {
+          const tag = document.createElement('div');
+          tag.className = 'thumb-layout-tag';
+          tag.textContent = layout;
+          thumb.appendChild(tag);
+        }
       }
+
+      // Frame number
       const num = document.createElement('span');
       num.className = 'frame-thumb-num';
       num.textContent = i + 1;
